@@ -487,7 +487,8 @@ legend {
 }
 
 .tarjeta-libro,
-.detalle-venta {
+.detalle-venta,
+.detalle-libro {
   width: 100%;
   min-width: 0;
   background-color: var(--color-superficie);
@@ -504,7 +505,8 @@ legend {
   justify-content: space-between;
 }
 
-.detalle-venta {
+.detalle-venta,
+.detalle-libro {
   margin-block-end: var(--espacio-lg);
 }
 
@@ -630,4 +632,46 @@ td[data-campo="total"],
 td[data-campo="id"],
 td[data-campo="fecha"] {
   white-space: nowrap;
+}
+
+/* Paginación y detalle del catálogo */
+.paginacion {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--espacio-sm) var(--espacio-md);
+  margin-block: var(--espacio-md);
+}
+
+.paginacion__limite {
+  min-width: 0;
+}
+
+.paginacion label {
+  margin-block-end: var(--espacio-xs);
+}
+
+.paginacion select {
+  width: auto;
+}
+
+.paginacion p {
+  margin: 0;
+  align-self: center;
+  color: var(--color-texto-secundario);
+}
+
+.tarjeta-libro > button {
+  align-self: flex-start;
+  margin-block-start: var(--espacio-md);
+}
+
+.detalle-libro__autores {
+  margin-block: 0 var(--espacio-md);
+  padding-inline-start: var(--espacio-lg);
+}
+
+.detalle-libro h2 {
+  border-bottom: 0;
+  color: var(--color-primario);
 }

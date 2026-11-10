@@ -32,3 +32,14 @@ Se registran para que los changes siguientes no las redescubran (no se implement
 - El parcial modelaba `autorIds` y no tenía `stock`; el contrato exige autorías `{autor_id, rol, orden}` con rol en {autor, coautor, traductor, ilustrador} y `stock` entero ≥ 0 (I-03).
 - `POST /ventas/` rechaza renglones con el mismo `libro_id` (422). El borrador del frontend debe evitarlos antes de enviar; si suma la cantidad o rechaza el duplicado lo decide I-04 (RN-17).
 - Los listados `GET /autores/` y `GET /clientes/` no filtran por nombre y tienen tope `limit=100` por página: el frontend pagina con `offset` (D-G04).
+
+## Brechas de contrato halladas en I-02
+Relevadas al construir el cliente HTTP y el Catálogo; ninguna requiere cambios en el backend:
+- El listado `GET /libros/` devuelve una lista sin total: no hay «página N de M». La paginación se resuelve en el frontend (página completa ⇒ puede haber más; página vacía al avanzar ⇒ fin del listado). Atiende I-02; sin cambios en el backend.
+- `precio` se serializa como cadena con dos decimales (`"18500.50"`). El frontend la muestra tal cual y no la convierte a número. Atiende I-02 y rige para I-03/I-04; sin cambios en el backend.
+- Las rutas de recurso no llevan barra final (`/libros/{id}`) y las de colección sí (`/libros/`); con la barra equivocada FastAPI responde 307 y el `Location` reescrito por Nginx pierde el puerto. El cliente pasa la ruta exacta en cada llamada. Atiende I-02; sin cambios en el backend.
+- Con el backend caído, Nginx responde 502 con cuerpo HTML: el cliente lo trata como fallo de conexión sin intentar interpretarlo como JSON. Atiende I-02; sin cambios en el backend.
+- Los `msg` de los 422 traen el prefijo `Value error, ` en las validaciones propias: el cliente lo quita al armar el mensaje. Atiende I-02 (reutilizable en I-03/I-04); sin cambios en el backend.
+- `titulo` con solo espacios filtraría por `'% %'`: el frontend recorta el texto y omite el parámetro si queda vacío. Atiende I-02; sin cambios en el backend.
+- El seed deja 4 libros: se ofrecen tamaños de página chicos (2, 5, 10) para poder demostrar G-01 (paginación) sin cargar más datos. Atiende I-02; sin cambios en el backend.
+- El requisito «Aviso de maqueta de la etapa 1» de `navegacion-vistas` no se cumple en el HTML actual (ninguna vista tiene aviso) y ya no describe el Global. Queda para un change posterior (I-03/I-04 al tocar sus vistas, o I-06 en la revisión de entrega); no requiere cambios en el backend.
