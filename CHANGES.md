@@ -11,7 +11,7 @@
 ## Cómo usar este documento
 
 1. Identificá el próximo change pendiente cuyas dependencias estén todas en `[x]`.
-2. Leé los archivos de "Leer antes" de la KB (`knowledge-base/`) y `docs/consigna-ejercicio-1.md`.
+2. Leé los archivos de "Leer antes" de la KB (`knowledge-base/`) y `docs/consignas/parcial-front-ejercicio-1.md`.
 3. Ejecutá `/opsx:propose <nombre-del-change>` y luego `/opsx:apply`.
 4. Al terminar, verificá manualmente (casos de `07_flujos_principales.md`) y `/opsx:archive`.
 5. Marcá el checkbox de Estado en este archivo (`[ ]` → `[x]`).
@@ -84,7 +84,7 @@ GATE 4: C-02 ✓ + C-05 ✓
 - **Dependencias**: ninguna
 - **Governance**: BAJO
 - **Leer antes**:
-  - `docs/consigna-ejercicio-1.md` §Ejercicio 1
+  - `docs/consignas/parcial-front-ejercicio-1.md` §Ejercicio 1
   - `knowledge-base/06_funcionalidades.md` §Épica 1
   - `knowledge-base/04_modelo_de_datos.md` §Entidades
   - `knowledge-base/08_arquitectura_propuesta.md` §Estructura de directorios
@@ -102,7 +102,7 @@ GATE 4: C-02 ✓ + C-05 ✓
 - **Dependencias**: `C-01`
 - **Governance**: BAJO
 - **Leer antes**:
-  - `docs/consigna-ejercicio-1.md` §Campos que el HTML debe anticipar (CSS Ej. 2)
+  - `docs/consignas/parcial-front-ejercicio-1.md` §Campos que el HTML debe anticipar (CSS Ej. 2)
   - `knowledge-base/06_funcionalidades.md` §Épica 2
   - `knowledge-base/08_arquitectura_propuesta.md` §Patrones
 

@@ -14,8 +14,8 @@ Stack: Python 3.12+, FastAPI, SQLModel/SQLAlchemy async, asyncpg, PostgreSQL 16 
 
 ### 2. Clonar el repositorio
 ```bash
-git clone https://github.com/MatiasLimina/Prog3_GordosProgramacion.git
-cd Prog3_GordosProgramacion/"TP - DEL OBJETO A LA PERSISTENCIA"
+git clone https://github.com/MatiasLimina/Integrador_Prog3.git
+cd Integrador_Prog3/backend
 ```
 
 ### 3. Entorno virtual
@@ -133,7 +133,7 @@ No existen `PATCH`/`DELETE` de ventas ni el alta de renglones por separado.
 
 Con `DB_ECHO=true` en `.env` (y reiniciando el servidor) la consola muestra cada consulta SQL emitida. Sirve para comprobar que el detalle de un libro y de una venta emiten la misma cantidad de consultas con 1 o con N autores/renglones.
 
-Evidencia: [docs/evidencia_c07.md](docs/evidencia_c07.md) — sentencias SQL y cantidad de consultas del detalle de libro y de venta con 1 y con N autores/renglones (2 consultas en todos los casos).
+Evidencia: [evidencia_c07.md](../docs/antecedentes/tp-backend/evidencia_c07.md) — sentencias SQL y cantidad de consultas del detalle de libro y de venta con 1 y con N autores/renglones (2 consultas en todos los casos).
 
 ## Estructura
 
@@ -153,4 +153,4 @@ Convenciones, reglas y nombres de constraints: [AGENTS.md](AGENTS.md).
 
 ## Estado actual
 - Hecho: infraestructura, `health`, `editoriales`, `generos`, `autores`, `libros`, `clientes`, `ventas`, migraciones, seed.
-- Evidencia C-07: [docs/evidencia_c07.md](docs/evidencia_c07.md).
+- Evidencia C-07: [evidencia_c07.md](../docs/antecedentes/tp-backend/evidencia_c07.md).

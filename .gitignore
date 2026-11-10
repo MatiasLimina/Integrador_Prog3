@@ -1,0 +1,26 @@
+# Secretos locales (cualquier nivel)
+.env
+.env.*
+!env.example
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Node (por si se usa alguna herramienta)
+node_modules/
+
+# Editor / sistema
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs y entregables generados
+*.log
+*.zip

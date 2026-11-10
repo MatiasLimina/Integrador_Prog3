@@ -1,6 +1,6 @@
 # Knowledge Base — Parcial_Front (frontend de una librería)
 
-Fuente: `docs/consigna-ejercicio-1.md` (TPI Programación III). Proyecto HTML/CSS/JS nativo, sin backend, **sin tests automáticos** (verificación manual + W3C).
+Fuente: `docs/consignas/parcial-front-ejercicio-1.md` (TPI Programación III). Proyecto HTML/CSS/JS nativo, sin backend, **sin tests automáticos** (verificación manual + W3C).
 
 | Archivo | Contenido |
 |---------|-----------|

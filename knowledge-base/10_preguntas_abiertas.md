@@ -14,7 +14,7 @@
 ## Inconsistencias detectadas
 - La consigna titula «Ejercicio 1 · 1.» etc. (numeración duplicada); no afecta el alcance.
 - El Ej. 1 pide datos estáticos pero «Ver detalle» en Historial exige una vista de detalle: definir cómo se maqueta en Etapa 1.
-- Nota: `Repaso Primer Parcial.pdf` se ignoró como fuente porque su texto ya está en `docs/consigna-ejercicio-1.md`.
+- Nota: `Repaso Primer Parcial.pdf` se ignoró como fuente porque su texto ya está en `docs/consignas/parcial-front-ejercicio-1.md`.
 
 ## Discovery
 - Sin incertidumbres de baja confianza en los 6 campos `discovery` (se infirieron con claridad); no hay `discovery` upstream (omitido).

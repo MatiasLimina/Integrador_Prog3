@@ -1,7 +1,7 @@
 # AGENTS.md — Librería (FastAPI + PostgreSQL)
 
 Guía canónica del proyecto para los integrantes del grupo y para cualquier agente de IA.
-Fuente de verdad del enunciado: `TP_Cap1a4_Consigna.pdf`. Reparto de tareas: `REPARTO.md`.
+Fuente de verdad del enunciado: `../docs/consignas/TP_Cap1a4_Consigna.pdf`. Reparto de tareas: `REPARTO.md`.
 Si algo de este archivo contradice la consigna, **gana la consigna** y se corrige este archivo por PR.
 
 ---
