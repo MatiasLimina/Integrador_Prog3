@@ -130,7 +130,7 @@ GATE 5: I-04 ✓ + I-05 ✓
 > El backend responde los errores como `{"detail": ...}`; en 422 `detail` es una lista de errores de validación.
 
 ### [I-02] `cliente-http-catalogo`
-- **Estado**: `[ ]` pendiente
+- **Estado**: `[x]` completado (archivado en `openspec/changes/archive/2026-11-10-cliente-http-catalogo`)
 - **Scope**:
   - Nuevo módulo `js/api.js`: base `/api` centralizada, helper de `fetch` (JSON, método, cuerpo), distingue error de red vs respuesta HTTP y extrae el mensaje de `detail` (string o lista 422)
   - Catálogo (`index.html` + `catalogo.js`): `GET /libros/?titulo=&limit=&offset=`; búsqueda parcial sin distinguir mayúsculas la hace el backend
