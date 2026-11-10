@@ -1,0 +1,4 @@
+# Archivos que lee Nginx o Docker: siempre LF, aunque Git en Windows convierta a CRLF.
+frontend/Dockerfile text eol=lf
+frontend/.dockerignore text eol=lf
+frontend/*.template text eol=lf
