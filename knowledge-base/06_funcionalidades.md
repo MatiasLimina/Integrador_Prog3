@@ -1,5 +1,7 @@
 # 06 — Funcionalidades
 
+> **Antecedente del parcial.** Este archivo describe el primer parcial (frontend 100 % en el navegador). El Global reemplaza ese enfoque por una API FastAPI + PostgreSQL servida vía Nginx: ver `docs/consignas/Consignas Global.pdf` y [../CHANGES.md](../CHANGES.md). Lo que dice sobre `localStorage` o la ausencia de backend ya no rige.
+
 ## Épica 1 — Estructura y navegación (Ej. 1, 20 pts)
 - Como operador, navego entre Catálogo, Libros, Clientes, Ventas e Historial desde `<nav>`.
 - HTML semántico (`header`, `nav`, `main`, `section`, `article`, `footer`); `<label for>` en cada campo; botones con texto de acción («Registrar libro», «Agregar renglón», «Confirmar venta», «Ver detalle»); tablas con `thead`/`th scope`.

@@ -1,5 +1,7 @@
 # 01 — Visión y objetivos
 
+> **Antecedente del parcial.** Este archivo describe el primer parcial (frontend 100 % en el navegador). El Global reemplaza ese enfoque por una API FastAPI + PostgreSQL servida vía Nginx: ver `docs/consignas/Consignas Global.pdf` y [../CHANGES.md](../CHANGES.md). Lo que dice sobre `localStorage` o la ausencia de backend ya no rige.
+
 ## Propósito
 TPI de Programación III (Tecnicatura Universitaria en Programación a Distancia, Prof. Matías Torres): construir el **frontend de una librería** que presenta su catálogo y registra libros, clientes y ventas. Todo se simula en el navegador; no hay backend.
 

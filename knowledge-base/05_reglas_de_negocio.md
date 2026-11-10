@@ -14,7 +14,7 @@
 - **RN-09** Género opcional («Sin clasificar» = ausencia); si se asigna, debe existir.
 
 ## Alta de clientes (Ej. 4)
-- **RN-10** Nombre completo y email no vacíos (un solo campo de nombre).
+- **RN-10** Nombre completo y email no vacíos (un solo campo de nombre). _En el Global el campo se envía como `nombre` (ver nota de contrato en 04)._
 - **RN-11** Email con formato válido.
 - **RN-12** Email único, comparado sin espacios exteriores y sin distinguir mayúsculas.
 
@@ -27,11 +27,11 @@
 - **RN-16** Cantidad entera > 0 (rechaza 0, negativos, decimales).
 - **RN-17** Sin libros repetidos en la misma venta: se modifica la cantidad del renglón o se informa el duplicado.
 - **RN-18** Antes de confirmar se pueden cambiar cantidades y quitar renglones.
-- **RN-19** subtotal = cantidad × precio; total = suma de subtotales; importes con dos decimales.
+- **RN-19** subtotal = cantidad × precio; total = suma de subtotales; importes con dos decimales. _En el Global el borrador puede mostrar importes provisorios; los importes confirmados (precio unitario, subtotales y total) se muestran siempre desde la respuesta de `POST /ventas/`, sin recalcular (regla dura 4)._
 - **RN-20** No se confirma sin cliente, sin renglones o con cantidades inválidas.
 - **RN-21** Al confirmar se registra id, fecha, cliente, renglones y total; se limpia el formulario y se muestra mensaje de resultado.
 - **RN-22** El precio unitario es **histórico**: se copia al renglón y no se relee del catálogo.
 - **RN-23** Ventas confirmadas inmutables: no se editan ni eliminan desde la interfaz.
 
 ## Persistencia (Ej. 6)
-- **RN-24** Primer inicio carga ejemplos; reaperturas recuperan lo guardado sin duplicar ejemplos ni ventas.
+- **RN-24** Primer inicio carga ejemplos; reaperturas recuperan lo guardado sin duplicar ejemplos ni ventas. _Antecedente del parcial: en el Global la carga inicial es `python -m scripts.seed` (vacía y recarga las tablas) y la persistencia es PostgreSQL vía la API (ver 04)._

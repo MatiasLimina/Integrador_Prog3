@@ -28,7 +28,9 @@ Restricción de gobernanza: el change modifica reglas duras (MEDIO) → la redac
 
 ## Decisions
 
-### D1 — Redacción de las reglas duras (texto a confirmar por el grupo)
+### D1 — Redacción de las reglas duras (texto aprobado por el grupo)
+
+> **Checkpoint 1.1: aprobado por el grupo el 2026-11-10, sin cambios.** Las reglas 1–6 se escriben verbatim como figuran abajo.
 
 Reemplaza completa la sección «Reglas Duras» de `CLAUDE.md`/`AGENTS.md`. El párrafo introductorio pasa a decir que el override de Strict TDD vale **solo para el frontend**. Texto propuesto, verbatim:
 
@@ -71,16 +73,18 @@ Decisiones nuevas a registrar en `09`:
 - **D-G04** Selectores de autores y clientes: ver D4.
 - **D-G05** Sin secretos en el repo ni en la evidencia; solo nombres de variables.
 
-### D4 — Selectores de autores y clientes: listado (recomendado) + consulta por ID donde la consigna lo pide
+### D4 — Selectores de autores y clientes: listado + consulta por ID donde la consigna lo pide
 
-**Recomendación**: los `<select>` de autores (alta de libro, I-03) y de clientes (venta, I-04) se cargan desde los **listados** `GET /autores/` y `GET /clientes/`, pidiendo páginas de `limit=100` y avanzando `offset` hasta recibir menos de 100 elementos. La consulta individual se usa donde la consigna o los casos la exigen: `GET /clientes/{id}` para «recuperar el cliente por ID» (G-03) y `GET /libros/{id}` para el detalle. Se documenta en `09` (D-G04) y, al cierre, en el README (I-06).
+> **Checkpoint 1.2: resuelto por el grupo el 2026-11-10 — se elige el listado paginado.** La consulta por ID no es el enfoque elegido para los selectores.
+
+**Decisión**: los `<select>` de autores (alta de libro, I-03) y de clientes (venta, I-04) se cargan desde los **listados** `GET /autores/` y `GET /clientes/`, pidiendo páginas de `limit=100` y avanzando `offset` hasta recibir menos de 100 elementos. La consulta individual se usa donde la consigna o los casos la exigen: `GET /clientes/{id}` para «recuperar el cliente por ID» (G-03) y `GET /libros/{id}` para el detalle. Se documenta en `09` (D-G04) y, al cierre, en el README (I-06).
 
 Rationale:
 - El backend expone ambos; la consigna permite usar listados si existen y solo exige documentar la elección (recuadro «Consultas por ID», p. 2).
 - Con listado el operador elige por nombre: no puede tipear un ID inexistente, así que el 409 por FK inexistente queda para el caso negativo deliberado de G-06 (que se prueba con un cuerpo armado a mano o un ID tipeado en la verificación), y el borrador de venta no se ensucia con IDs inválidos.
 - Menos peticiones por interacción (una o pocas páginas al abrir la vista contra un `GET /{id}` por cada autor agregado).
 
-Alternativa considerada: consulta por ID (`GET /autores/{id}` / `GET /clientes/{id}`) con campo numérico + botón «Verificar» que muestra el nombre. Ventaja: es el camino que describe la consigna como base y escala a cualquier tamaño de tabla. Desventaja: el operador necesita conocer los IDs y la UX es peor. Queda como **fallback** si el grupo prefiere ceñirse al contrato de referencia o si la cantidad de registros hiciera inviable el listado.
+Alternativa considerada: consulta por ID (`GET /autores/{id}` / `GET /clientes/{id}`) con campo numérico + botón «Verificar» que muestra el nombre. Ventaja: es el camino que describe la consigna como base y escala a cualquier tamaño de tabla. Desventaja: el operador necesita conocer los IDs y la UX es peor. Queda descartada como enfoque de los selectores; solo sería un fallback si la cantidad de registros hiciera inviable el listado.
 
 Límite conocido: los listados no filtran por nombre y tienen tope `limit=100` por página; con datos ficticios del seed el volumen es mínimo, y el paginado por `offset` cubre más de 100.
 
@@ -113,5 +117,5 @@ Se anotan en `10` (sección «Brechas de contrato para I-03/I-04») para que los
 
 ## Open Questions
 
-- ¿El grupo prefiere el fallback por ID de D4 para quedar alineado al contrato de referencia? (no cambia las tareas de I-00: solo el texto de D-G04).
+- ~~¿El grupo prefiere el fallback por ID de D4?~~ Resuelta el 2026-11-10: el grupo eligió el listado paginado (D4); D-G04 en `09` lo refleja.
 - Integrantes del grupo para el README: no afecta a I-00; se completa en I-06.

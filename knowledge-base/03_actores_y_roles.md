@@ -1,5 +1,7 @@
 # 03 — Actores y roles
 
+> **Antecedente del parcial.** Este archivo describe el primer parcial (frontend 100 % en el navegador). El Global reemplaza ese enfoque por una API FastAPI + PostgreSQL servida vía Nginx: ver `docs/consignas/Consignas Global.pdf` y [../CHANGES.md](../CHANGES.md). Lo que dice sobre `localStorage` o la ausencia de backend ya no rige.
+
 ## Actores
 | Actor | Descripción |
 |-------|-------------|

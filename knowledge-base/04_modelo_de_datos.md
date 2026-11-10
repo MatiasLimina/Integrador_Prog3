@@ -1,6 +1,8 @@
 # 04 — Modelo de datos
 
-Arrays y objetos JS con **identificadores estables**.
+Arrays y objetos JS con **identificadores estables** (modelo del parcial).
+
+> **Contrato vigente en el Global:** los schemas del backend (`backend/app/modules/*/schemas.py`). Difiere del parcial en: el libro tiene `stock` (entero ≥ 0); las autorías son `{autor_id, rol, orden}` con rol en {autor, coautor, traductor, ilustrador} (no `autorIds`); el cliente usa el campo `nombre` (no «nombre completo»).
 
 ## Entidades
 | Entidad | Campos |
@@ -25,5 +27,10 @@ Cliente   1──n Venta 1──n Renglón n──1 Libro
 ## Seed data (mínimo, Ej. 3)
 ≥ 6 libros, 2 editoriales, 2 géneros, 3 autores, 3 clientes ficticios. Debe incluir al menos un libro sin género y uno con varios autores. Se cargan en el primer inicio y no se duplican al reabrir.
 
+
+> Seed del Global: los datos ficticios los carga `python -m scripts.seed` en PostgreSQL (vacía las tablas antes de cargar: revisar antes de correrlo en un entorno con datos). La regla «no se duplican al reabrir» del parcial (primer inicio en `localStorage`) es antecedente.
+
 ## Persistencia
-`localStorage` guarda libros, clientes y ventas (Ej. 6). La clave y estructura del catálogo guardado se documentan en el README para reproducir la prueba del precio histórico.
+Los registros (libros, clientes, ventas e importes) viven en **PostgreSQL** y se acceden solo por la API (FastAPI). Las migraciones (`alembic upgrade head`) crean el esquema. El navegador no guarda nada confirmado: únicamente mantiene en memoria el borrador de la venta, sin `localStorage`.
+
+> Antecedente del parcial: libros, clientes y ventas se guardaban en `localStorage`.

@@ -1,5 +1,7 @@
 # 07 — Flujos principales
 
+> **Antecedente del parcial.** Este archivo describe el primer parcial (frontend 100 % en el navegador). El Global reemplaza ese enfoque por una API FastAPI + PostgreSQL servida vía Nginx: ver `docs/consignas/Consignas Global.pdf` y [../CHANGES.md](../CHANGES.md). Lo que dice sobre `localStorage` o la ausencia de backend ya no rige.
+
 ## F1 — Consultar catálogo con filtro
 1. Se abre `index.html`; JS genera el catálogo desde el array de libros.
 2. El operador escribe en el buscador → `trim` + minúsculas + `includes` sobre el título.

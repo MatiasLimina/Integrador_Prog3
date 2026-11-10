@@ -1,26 +1,33 @@
 # 08 — Arquitectura propuesta
 
+> Vigente para el **Global**. La arquitectura del parcial (sin servidor, `localStorage`) es antecedente: ver [../CHANGES.md](../CHANGES.md).
+
 ## Patrones
 - Separación estructura (HTML) / presentación (CSS) / comportamiento (JS).
-- Funciones acotadas con responsabilidades reconocibles: datos/repositorio (localStorage), validaciones puras, renderizado, manejadores de eventos.
-- Validaciones como funciones puras (fáciles de verificar manualmente).
-- Ids estables en datos; el HTML expone ids, `name` y `data-*` para JS.
+- Cliente HTTP centralizado (`js/api.js`, I-02): base `/api` en un solo lugar, helper de `fetch` (JSON, método, cuerpo), distinción entre error de red y respuesta HTTP, y extracción del mensaje de `detail` (string o lista 422).
+- Funciones acotadas con responsabilidades reconocibles: acceso a la API, validaciones puras, renderizado, manejadores de eventos.
+- El borrador de venta vive solo en memoria; importes y registros confirmados siempre vienen de la respuesta de la API.
+- Ids en los datos; el HTML expone ids, `name` y `data-*` para JS.
 
-## Estructura de directorios propuesta
+## Estructura de directorios
 ```
-index.html            (+ libros.html, clientes.html, ventas.html, historial.html si multipágina)
-css/                  (estilos externos, clases reutilizadas)
-js/                   (datos, validaciones, render, eventos, storage)
-assets/               (imágenes locales, con procedencia si son ajenas)
-README.md
+frontend/
+  Dockerfile, .dockerignore, default.conf.template   (imagen Nginx, I-01)
+  public/                                            (HTML, css/, js/, assets/)
+backend/                                             (FastAPI + Alembic + scripts.seed; reglas en backend/AGENTS.md)
+docs/consignas/                                      (consigna del Global)
+evidencia/                                           (capturas, sin secretos)
+README.md, DEPLOY.md, CHANGES.md
 ```
-La estructura final de `js/` queda a decisión del equipo (ver 09/10).
 
 ## Seguridad
-Sin seguridad real (datos ficticios, sin servidor). Única medida: insertar texto de usuario con `textContent` para evitar inyección HTML (RN-04).
+- Todo dato escrito por usuarios o devuelto por la API se inserta como texto con `textContent`, nunca como HTML (RN-04).
+- Secretos fuera del repo: no se versiona `.env`, credenciales ni valores reales de despliegue; solo nombres de variables en `backend/env.example`. Se ocultan en las capturas de `evidencia/`.
+- El backend no se publica: el único camino desde el navegador es el proxy `/api/` de Nginx.
 
 ## Verificación y calidad
-**Sin test runners ni tests automáticos.** Validación W3C del HTML; casos manuales (07); revisión de teclado y de 320/1280 px.
+Frontend: sin test runners; casos manuales G-01..G-07 y validación W3C. Backend: `pytest` (`backend/tests/`) y `.http` (`backend/test/`).
 
-## Variables de entorno / build
-No aplica: sin npm, sin build, sin env vars, sin dependencias instaladas. Se abre `index.html` en el navegador.
+## Variables de entorno
+- `API_UPSTREAM` (frontend): `host:puerto` del backend para el proxy de Nginx (p. ej. `host.docker.internal:8000` en local, `<proyecto>_backend:8000` en Easypanel). La imagen solo sustituye esta variable (`NGINX_ENVSUBST_FILTER=^API_UPSTREAM$`).
+- `DATABASE_URL` (backend): conexión a PostgreSQL con el driver `postgresql+asyncpg`; solo en el entorno del servicio, nunca en el repo.
