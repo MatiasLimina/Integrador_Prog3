@@ -108,7 +108,7 @@ GATE 5: I-04 ✓ + I-05 ✓
 ## FASE 1 — Imagen del frontend (Ej. 4)
 
 ### [I-01] `imagen-frontend-nginx`
-- **Estado**: `[ ]` pendiente
+- **Estado**: `[x]` completado (archivado en `openspec/changes/archive/2026-11-10-imagen-frontend-nginx`)
 - **Scope**:
   - `frontend/Dockerfile` exactamente como la consigna (`nginx:1.30-alpine`, `NGINX_ENVSUBST_FILTER=^API_UPSTREAM$`, dos `COPY`, `EXPOSE 80`)
   - `frontend/.dockerignore` (`.git`, `**/.env`, `**/.env.*`, `**/node_modules`, `**/.DS_Store`)
