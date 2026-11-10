@@ -89,7 +89,7 @@ GATE 5: I-04 ✓ + I-05 ✓
 ## FASE 0 — Preparación
 
 ### [I-00] `reglas-global`
-- **Estado**: `[ ]` pendiente
+- **Estado**: `[x]` completado (archivado en `openspec/changes/archive/2026-11-10-reglas-global`)
 - **Scope**:
   - Actualizar `CLAUDE.md` y `AGENTS.md` (mantenerlos idénticos) al Global: quitar la regla dura 4 («NUNCA depender de backend…/localStorage») y reemplazarla por «los registros e importes vienen de la API vía `/api`; el navegador solo guarda el borrador de la venta en memoria»
   - Acotar la regla 1 (sin test runners) al frontend; el backend conserva su suite pytest
