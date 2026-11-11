@@ -1,6 +1,6 @@
 # DEPLOY — Librería en Easypanel
 
-> Ejercicio 5 (I-05). Este archivo no contiene credenciales, URL de la base ni IP del VPS: esos valores viven solo en Environment de cada servicio de Easypanel. El despliegue anterior del TP backend (`docker run` manual en el puerto 8000) está en [docs/antecedentes/tp-backend/DEPLOY.md](docs/antecedentes/tp-backend/DEPLOY.md) y se retiró al final de este despliegue (ver «Backend del TP (retirado)»).
+> Ejercicio 5 (I-05). Este archivo no contiene credenciales, URL de la base ni IP del VPS: esos valores viven solo en Environment de cada servicio de Easypanel. El despliegue anterior del TP backend (`docker run` manual en el puerto 8000) está en `docs/antecedentes/tp-backend/DEPLOY.md` (en el repositorio) y se retiró al final de este despliegue (ver «Backend del TP (retirado)»).
 
 ## URL pública
 
@@ -11,8 +11,9 @@ https://libreria.matiaslimina.me/
 
 ## Revisión desplegada
 
-- Commit de `main`: `3a2c55d` (el que muestra Easypanel en el despliegue de `backend` y de `frontend`). Los ajustes de I-05 (`.dockerignore`, `env.example`, este archivo) no cambian el comportamiento de las imágenes; la versión final se redespliega en I-06.
-- Fecha del despliegue: 2026-11-11
+- Commit de `main`: `8dd4865` (revisión desplegada en `backend` y `frontend` en el redespliegue final de I-06). Los commits posteriores son solo documentación y evidencia: `git diff --stat 8dd4865 HEAD -- frontend backend` solo lista `backend/README.md` (enlaces a `docs/` pasados a texto); el código desplegado es idéntico.
+- Fecha del despliegue: 2026-11-11 (redespliegue final de `backend` y `frontend`, ~22:49 UTC)
+- Mantener la URL operativa durante la corrección.
 
 ## Servicios
 
@@ -114,4 +115,4 @@ Estado: **retirado el 2026-11-11**. Se ejecutaron ambos comandos (`ufw` borró l
 
 ## Casos G-01 a G-07
 
-_Pendiente (I-06). Evidencia en [evidencia/](evidencia/)._
+Resultados y evidencia de los casos G-01 a G-07 en la tabla de [README.md](README.md#verificación-g-01-a-g-07) (capturas `G-0X-*` en [evidencia/](evidencia/)).

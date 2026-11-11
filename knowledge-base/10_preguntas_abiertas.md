@@ -22,7 +22,8 @@
 - Sin incertidumbres de baja confianza en los 6 campos `discovery` (se infirieron con claridad); no hay `discovery` upstream (omitido).
 
 ## Global — preguntas
-- Integrantes del grupo para el README: se completan en I-06.
+- _(Resuelta en I-06)_ Integrantes del grupo para el README: ya figuran en la sección «Grupo» del `README.md`.
+- _(Resuelta en I-06)_ Aviso de maqueta de la etapa 1: `openspec/specs/navegacion-vistas/spec.md` ya no tiene ese requisito.
 - Selectores de autores y clientes: resuelta, ver D-G04 en `09`.
 
 ## Brechas de contrato para I-03/I-04
@@ -42,7 +43,7 @@ Relevadas al construir el cliente HTTP y el Catálogo; ninguna requiere cambios 
 - Los `msg` de los 422 traen el prefijo `Value error, ` en las validaciones propias: el cliente lo quita al armar el mensaje. Atiende I-02 (reutilizable en I-03/I-04); sin cambios en el backend.
 - `titulo` con solo espacios filtraría por `'% %'`: el frontend recorta el texto y omite el parámetro si queda vacío. Atiende I-02; sin cambios en el backend.
 - El seed deja 4 libros: se ofrecen tamaños de página chicos (2, 5, 10) para poder demostrar G-01 (paginación) sin cargar más datos. Atiende I-02; sin cambios en el backend.
-- El requisito «Aviso de maqueta de la etapa 1» de `navegacion-vistas` no se cumple en el HTML actual (ninguna vista tiene aviso) y ya no describe el Global. Queda para un change posterior (I-03/I-04 al tocar sus vistas, o I-06 en la revisión de entrega); no requiere cambios en el backend.
+- El requisito «Aviso de maqueta de la etapa 1» de `navegacion-vistas` no se cumple en el HTML actual (ninguna vista tiene aviso) y ya no describe el Global. _(Resuelta en I-06: la spec vigente ya no tiene ese requisito.)_ No requiere cambios en el backend.
 
 ## Brechas de contrato halladas en I-03
 Relevadas al migrar las altas de libros y clientes a la API; ninguna requiere cambios en el backend:

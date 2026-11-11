@@ -133,7 +133,7 @@ No existen `PATCH`/`DELETE` de ventas ni el alta de renglones por separado.
 
 Con `DB_ECHO=true` en `.env` (y reiniciando el servidor) la consola muestra cada consulta SQL emitida. Sirve para comprobar que el detalle de un libro y de una venta emiten la misma cantidad de consultas con 1 o con N autores/renglones.
 
-Evidencia: [evidencia_c07.md](../docs/antecedentes/tp-backend/evidencia_c07.md) — sentencias SQL y cantidad de consultas del detalle de libro y de venta con 1 y con N autores/renglones (2 consultas en todos los casos).
+Evidencia: `docs/antecedentes/tp-backend/evidencia_c07.md` (en el repositorio, no va en el ZIP) — sentencias SQL y cantidad de consultas del detalle de libro y de venta con 1 y con N autores/renglones (2 consultas en todos los casos).
 
 ## Estructura
 
@@ -153,4 +153,4 @@ Convenciones, reglas y nombres de constraints: [AGENTS.md](AGENTS.md).
 
 ## Estado actual
 - Hecho: infraestructura, `health`, `editoriales`, `generos`, `autores`, `libros`, `clientes`, `ventas`, migraciones, seed.
-- Evidencia C-07: [evidencia_c07.md](../docs/antecedentes/tp-backend/evidencia_c07.md).
+- Evidencia C-07: `docs/antecedentes/tp-backend/evidencia_c07.md` (en el repositorio, no va en el ZIP).
