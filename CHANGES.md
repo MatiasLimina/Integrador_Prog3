@@ -149,7 +149,7 @@ GATE 5: I-04 ✓ + I-05 ✓
   - `frontend/public/js/catalogo.js`, `frontend/public/index.html`
 
 ### [I-03] `altas-libros-clientes-api`
-- **Estado**: `[ ]` pendiente
+- **Estado**: `[x]` completado (archivado en `openspec/changes/archive/2026-11-11-altas-libros-clientes-api`)
 - **Scope**:
   - `libros.html`: agregar campo **stock** (entero ≥ 0); editorial y género cargados desde `GET /editoriales/` y `GET /generos/` (género opcional)
   - Reemplazar los checkboxes fijos de autores por un editor de autorías: `autor_id` (verificado con `GET /autores/{id}` mostrando el nombre, o elegido del listado `GET /autores/`), `rol` (autor, coautor, traductor, ilustrador) y `orden` (≥ 1); exigir ≥ 1 autoría en el front (el backend acepta lista vacía)

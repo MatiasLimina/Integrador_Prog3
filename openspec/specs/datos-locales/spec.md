@@ -8,19 +8,23 @@ Define el modelo de datos local de la librería (libros, editoriales, géneros, 
 
 ### Requirement: Conjunto de datos inicial
 
-El sistema MUST disponer de un conjunto de datos local en memoria con al menos 6 libros, 2 editoriales, 2 géneros, 3 autores y 3 clientes ficticios, disponible desde la primera apertura de las vistas que todavía no consultan la API (Libros, Clientes, Ventas e Historial). La vista Catálogo MUST NOT usar este conjunto: sus libros provienen de la API.
+El sistema MUST disponer de un conjunto de datos local en memoria con al menos 6 libros, 2 editoriales, 2 géneros, 3 autores y 3 clientes ficticios, disponible desde la primera apertura de las vistas que todavía no consultan la API (Ventas e Historial). Las vistas Catálogo, Libros y Clientes MUST NOT usar este conjunto: sus datos provienen de la API.
 
 #### Scenario: Cantidad mínima de registros
-- **WHEN** se abre `libros.html` con JavaScript habilitado
+- **WHEN** se abre `ventas.html` con JavaScript habilitado
 - **THEN** existen al menos 6 libros, 2 editoriales, 2 géneros, 3 autores y 3 clientes en los datos locales
 
 #### Scenario: Clientes disponibles aunque el catálogo no los muestre
-- **WHEN** se consultan los datos locales desde la vista Libros
+- **WHEN** se consultan los datos locales desde la vista Ventas
 - **THEN** los 3 clientes del conjunto inicial están presentes y completos (nombre completo y email)
 
 #### Scenario: Catálogo sin datos locales
 - **WHEN** se abre `index.html`
 - **THEN** no se carga el conjunto de datos local
+
+#### Scenario: Libros y Clientes sin datos locales
+- **WHEN** se abren `libros.html` o `clientes.html`
+- **THEN** no se cargan el conjunto de datos local ni el módulo de persistencia
 
 ### Requirement: Referencias válidas de los libros
 
@@ -63,56 +67,20 @@ Cada registro MUST tener un identificador único dentro de su colección (libros
 - **THEN** no hay identificadores repetidos dentro de cada colección
 
 #### Scenario: Identificador estable entre renderizados
-- **WHEN** el listado de libros de la vista Libros se vuelve a renderizar tras un alta
+- **WHEN** la vista Ventas vuelve a generar el selector de libros tras confirmar una venta
 - **THEN** cada libro conserva el mismo identificador y sus referencias no cambian
 
 ### Requirement: Datos locales sin red ni persistencia
 
-Las vistas que todavía no consultan la API MUST obtener los datos de estructuras locales en memoria. La vista Catálogo queda fuera de este requisito: obtiene los libros de la API (ver `catalogo-libros`).
+Las vistas que todavía no consultan la API (Ventas e Historial) MUST obtener los datos de estructuras locales en memoria. Las vistas Catálogo, Libros y Clientes quedan fuera de este requisito: obtienen sus datos de la API (ver `catalogo-libros`, `registro-libros` y `registro-clientes`).
 
 #### Scenario: Apertura sin conexión
-- **WHEN** se abre `libros.html` con el backend detenido
-- **THEN** el listado de libros de la vista se genera con los libros del conjunto inicial
+- **WHEN** se abre `ventas.html` con el backend detenido
+- **THEN** el selector de libros de la vista se genera con los libros del conjunto inicial
 
 #### Scenario: Perfil de navegador sin datos guardados
-- **WHEN** se abre `libros.html` en un perfil de navegador que nunca almacenó datos del proyecto
-- **THEN** se listan los libros del conjunto inicial sin configuración previa
-
-### Requirement: Identificador de los registros dados de alta
-
-Cada alta de libro o de cliente MUST recibir un identificador calculado a partir del mayor identificador existente en su colección, de modo que sea único y numérico. El identificador MUST NOT repetir ninguno de los ya presentes en esa colección.
-
-#### Scenario: Libro nuevo
-- **WHEN** se da de alta un libro en una colección cuyos identificadores van de 1 a 6
-- **THEN** el libro recibe el identificador 7 y ningún libro existente cambia de identificador
-
-#### Scenario: Cliente nuevo
-- **WHEN** se da de alta un cliente en una colección cuyos identificadores van de 1 a 3
-- **THEN** el cliente recibe el identificador 4 y ningún cliente existente cambia de identificador
-
-#### Scenario: Altas consecutivas
-- **WHEN** se dan de alta dos registros seguidos en la misma colección
-- **THEN** cada uno recibe un identificador distinto y mayor que el del anterior
-
-### Requirement: Inserción de las altas en los datos locales
-
-Un alta validada MUST incorporarse a la colección correspondiente de los datos locales y MUST quedar disponible para el resto de las vistas que consultan esa colección en la misma página. La inserción MUST preservar las referencias válidas de los libros a editoriales, géneros y autores.
-
-#### Scenario: Libro disponible tras el alta
-- **WHEN** se da de alta un libro válido
-- **THEN** el libro forma parte de la colección de libros y puede consultarse por su identificador
-
-#### Scenario: Cliente disponible tras el alta
-- **WHEN** se da de alta un cliente válido
-- **THEN** el cliente forma parte de la colección de clientes y puede consultarse por su identificador
-
-#### Scenario: Referencias válidas del libro dado de alta
-- **WHEN** se revisa un libro dado de alta
-- **THEN** su editorial y todos sus autores existen en las colecciones correspondientes, y su género, si está asignado, también existe
-
-#### Scenario: Género ausente en el libro dado de alta
-- **WHEN** se da de alta un libro sin género
-- **THEN** el libro no presenta referencia a ningún género y se interpreta como «Sin clasificar»
+- **WHEN** se abre `ventas.html` en un perfil de navegador que nunca almacenó datos del proyecto
+- **THEN** se ofrecen los libros y clientes del conjunto inicial sin configuración previa
 
 ### Requirement: Seed de ventas de ejemplo
 Los datos locales MUST incluir al menos dos ventas de ejemplo con identificador, fecha, cliente, renglones (con título y precio unitario histórico) y total, para que el Historial muestre contenido al abrir.
@@ -140,23 +108,27 @@ Las ventas confirmadas MUST NOT poder editarse ni eliminarse desde la interfaz.
 - **THEN** no hay campos editables ni botones de editar o eliminar ventas
 
 ### Requirement: Persistencia en localStorage
-La aplicación MUST persistir libros, clientes y ventas en `localStorage` bajo las claves `libreria:libros`, `libreria:clientes` y `libreria:ventas`. En el primer inicio MUST cargar los ejemplos; en reaperturas MUST recuperar los datos guardados sin duplicar ejemplos ni ventas.
+La aplicación MUST persistir libros, clientes y ventas en `localStorage` bajo las claves `libreria:libros`, `libreria:clientes` y `libreria:ventas` solo en las vistas Ventas e Historial. En el primer inicio MUST cargar los ejemplos; en reaperturas MUST recuperar los datos guardados sin duplicar ejemplos ni ventas. Las altas de libros y clientes MUST NOT escribir en `localStorage`.
 
 #### Scenario: Primer inicio
-- **WHEN** se abre la aplicación en un perfil sin datos guardados
+- **WHEN** se abre la vista Ventas en un perfil sin datos guardados
 - **THEN** se cargan los ejemplos a `localStorage` y se muestran
 
 #### Scenario: Reapertura
-- **WHEN** se reabre la aplicación tras haber guardado datos
+- **WHEN** se reabre la vista Ventas tras haber guardado datos
 - **THEN** se recuperan los datos guardados sin duplicar ejemplos ni ventas
 
 #### Scenario: Guardado tras alta
-- **WHEN** se da de alta un libro, cliente o venta
+- **WHEN** se confirma una venta en la vista Ventas
 - **THEN** el cambio se persiste en `localStorage`
 
 #### Scenario: Recuperación tras recarga
-- **WHEN** se recarga la página tras altas y ventas
+- **WHEN** se recarga la vista Historial tras confirmar ventas
 - **THEN** los datos se recuperan sin duplicar ejemplos ni ventas
+
+#### Scenario: Altas por la API sin almacenamiento local
+- **WHEN** se registra un libro en la vista Libros o un cliente en la vista Clientes y luego se revisa `localStorage` del origen `http://127.0.0.1:8080`
+- **THEN** ninguna clave `libreria:*` cambió por esas altas
 
 ### Requirement: Precio histórico preservado en persistencia
 El precio unitario de una venta confirmada MUST conservarse aunque cambie el precio del libro en el catálogo guardado en `localStorage`.
