@@ -1,0 +1,59 @@
+# Design
+
+## Context
+
+- Motivación y alcance: ver `proposal.md`. Requisitos observables: ver `specs/despliegue/spec.md`.
+- **Repositorio**: `main` está sincronizado con `origin/main` (I-04 archivado). `frontend/Dockerfile`, `frontend/.dockerignore` y `frontend/default.conf.template` están versionados tal como los pide la consigna (I-01). `backend/` contiene el código del TP, `requirements.txt`, `alembic.ini` (sin URL: `migrations/env.py` toma `DATABASE_URL` vía `app.core.config`), `migrations/versions/` (`5600df0fc99c` → `9df0eb6a1dd6`), `env.example`, `Dockerfile` y `.dockerignore`; `backend/.env` existe en local pero está ignorado (`backend/.gitignore` y `.gitignore` raíz).
+- **Imagen del backend** (`backend/Dockerfile`): `python:3.12-alpine`, usuario no root `app`, `EXPOSE 8000`, `HEALTHCHECK` con `wget` a `http://127.0.0.1:8000/health/ready`, `CMD sh -c "alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port 8000"`. `app.core.config.get_settings()` falla con «Falta la variable de entorno DATABASE_URL» si no está definida; solo lee además `DB_ECHO`.
+- **Carga inicial** (`backend/scripts/seed.py`): `TRUNCATE <todas las tablas del metadata> RESTART IDENTITY CASCADE` y recarga los datos ficticios con IDs fijos (editorial 1, libros 1 y 4, cliente 2, venta 1). Es destructiva sobre cualquier base con datos.
+- **Antecedente en el mismo VPS** (`docs/antecedentes/tp-backend/DEPLOY.md`): proyecto de Easypanel `gordos_programacion` con un servicio Postgres `gordos_programacion_db` (PostgreSQL 17); la base `libreria` y el usuario `libreria` los usa el contenedor `libreria` del TP backend (`docker run` manual, puerto público 8000, regla `ufw allow 8000/tcp`). Ese contenedor **no aparece en Easypanel** (se lanzó a mano por SSH). El grupo decidió retirarlo (las notas ya están publicadas), sin tocar `gordos_programacion_db` ni la base `libreria`.
+- **Restricciones**: el agente no tiene acceso a Easypanel ni al VPS; todo paso en Easypanel lo ejecuta el grupo, **desde la interfaz web** (sin SQL ni CLI en el VPS), con una única excepción: retirar el contenedor del TP requiere SSH. Gobernanza ALTA: cada paso con efectos se describe y espera confirmación. Reglas duras 1 (sin test runners en el frontend), 2 (sin build), 6 (sin secretos versionados ni visibles en capturas).
+
+## Goals / Non-Goals
+
+**Goals:**
+- Dejar el repositorio listo para que Easypanel construya ambos servicios desde `main` sin pasos manuales fuera de la UI.
+- Un procedimiento en Easypanel ordenado, con un punto de verificación y una evidencia por paso, y con los pasos destructivos aislados y confirmados.
+- `DEPLOY.md` suficiente para repetir o actualizar el despliegue sin conocer valores privados.
+
+**Non-Goals:**
+- Cambiar código del backend o del frontend, o el `backend/Dockerfile` (cumple la consigna; pasar de `alpine` a `slim` no aporta y el antecedente ya probó que construye en el VPS).
+- Automatizar despliegues (webhooks de auto-deploy, CI). Se deja documentado como opcional.
+- Ejecutar G-01..G-07 (I-06), salvo la comprobación pública de salud, catálogo y persistencia que este change necesita para cerrarse.
+
+## Decisions
+
+1. **Servicio Postgres nuevo `global_db`, creado desde la GUI de Easypanel** (decisión del grupo, tarea 0.1). En el proyecto `gordos_programacion`: + Service → Postgres, nombre `global_db`; Easypanel genera la base, el usuario y la clave y muestra una «Internal Connection URL». La `DATABASE_URL` del backend es esa URL con el esquema cambiado a `postgresql+asyncpg://`; el host interno es `gordos_programacion_global_db` (no se versiona ningún valor real). *Por qué*: el seed hace `TRUNCATE … CASCADE` y los casos G-01..G-07 crean libros, clientes y ventas; un servicio propio nace vacío, queda aislado de `gordos_programacion_db`, y no exige SQL ni acceso al VPS. *Alternativas descartadas*: (a) base `libreria_global` dentro de `gordos_programacion_db` creada por SQL (requería consola SQL y credenciales de administrador); (b) reutilizar la base `libreria` (mezcla datos y no da estado inicial conocido).
+2. **Archivos del backend: corregir solo lo que pide la consigna.** `backend/.dockerignore` pasa a los patrones recursivos de la consigna (`.git`, `**/.env`, `**/.env.*`, `**/.venv`, `**/__pycache__`, `**/.pytest_cache`) y conserva lo que ya excluía (`venv/`, `*.py[cod]`, `.mypy_cache/`, `.ruff_cache/`). En `backend/env.example` solo se agrega un comentario con la forma de `DATABASE_URL` en Easypanel (`postgresql+asyncpg://<usuario>:<clave>@<proyecto>_<servicio-postgres>:5432/<base>`), sin cambiar las variables. *Alternativa descartada*: reescribir el `Dockerfile` con el ejemplo `-slim` de la consigna; la consigna lo da solo para quien no tenga uno.
+3. **`frontend/env.example` con el nombre de la variable.** Una línea comentada y `API_UPSTREAM=grupo1_backend:8000` (el valor de ejemplo de la consigna). Queda fuera de `public/` y el `Dockerfile` solo copia `public/` y la plantilla, así que no entra en la imagen. *Alternativa*: documentar el nombre solo en `DEPLOY.md` → la consigna pide «un archivo de ejemplo con los nombres de las variables» junto a los Dockerfiles.
+4. **Orden de despliegue: backend primero, frontend después.** Nginx resuelve el nombre de `proxy_pass` al arrancar; si `<proyecto>_backend` no existe todavía, falla con «host not found in upstream» y el contenedor del frontend queda reiniciándose. Con el backend en ejecución, el nombre del servicio Swarm resuelve a una IP virtual estable, así que redesplegar el backend después no rompe el frontend.
+5. **Migraciones automáticas, seed manual una sola vez.** Las migraciones las aplica el `CMD` en cada arranque (idempotente). El seed se corre una única vez, desde la Console del servicio backend, solo después de comprobar que las tablas están vacías (con `global_db` recién creada lo están, pero la comprobación se mantiene); nunca en actualizaciones. Se ejecuta desde la Console/Terminal del servicio backend en Easypanel. Comando de salud: `wget -qO- http://127.0.0.1:8000/health/ready` (la imagen es alpine y el `HEALTHCHECK` del `Dockerfile` ya usa `wget`).
+6. **Qué se publica y qué no** (regla dura 6, D-G05). Se publican en `DEPLOY.md`: URL pública (la consigna la exige y no es un secreto), commit desplegado, Build Paths, puertos, forma de `API_UPSTREAM` (`gordos_programacion_backend:8000`) y nombres de variables. No se publican: `DATABASE_URL` ni la «Internal Connection URL», usuario y clave de la base, IP del VPS ni datos del panel (el nombre del servicio `global_db` sí, no es secreto). En capturas se tapan esos valores (recuadro sólido, no desenfoque leve) antes de guardar el archivo en `evidencia/`.
+7. **Evidencia por paso** con prefijo `I-05-` (ver `tasks.md` §4–§6): logs del build y de migraciones, salud 200 en la Console, salida del seed, Domains del backend vacío, Domains del frontend (HTTPS → HTTP 80), salud y catálogo por la URL pública, persistencia tras redespliegue.
+8. **`DEPLOY.md` como fuente operativa.** Reescribe el borrador actual conservando su tabla de servicios y agrega: base usada (servicio `global_db`, sin credenciales), orden de despliegue, migraciones, carga inicial con advertencia de `TRUNCATE`, pasos de actualización (push a `main` → Deploy backend → comprobar salud → Deploy frontend si cambió `frontend/`; nunca el seed) y la tabla de diagnóstico del paso 8 de la consigna con lo que efectivamente se usó. La sección «Casos G-01 a G-07» queda para I-06.
+
+9. **Retiro del backend del TP al final, por SSH, con confirmación.** Como el contenedor `libreria` no está en Easypanel, se baja con `docker rm -f libreria` y `ufw delete allow 8000/tcp` (único paso fuera de la GUI). Va **después** de las comprobaciones públicas del Global (§5) para no dejar un hueco sin servicio y para poder volver atrás si el despliegue falla. No se borra `gordos_programacion_db` ni la base `libreria`, de modo que el retiro es reversible con el `docker run` de `docs/antecedentes/tp-backend/DEPLOY.md`. *Reemplaza* el supuesto anterior de que el TP seguía en línea.
+
+## Risks / Trade-offs
+
+- [El seed corre sobre una base con datos] → pérdida irreversible de ventas y registros. Mitigación: decisión 1 (`global_db` nueva y vacía, sin relación con `libreria`); antes de correrlo, comprobar desde la Console que `libro`, `cliente` y `venta` están vacías y pedir confirmación explícita.
+- [`DATABASE_URL` con driver incorrecto (`postgresql://`) o host público] → el backend no arranca o expone tráfico de la base. Mitigación: forma documentada en `env.example`; usar la «Internal Connection URL» del servicio `global_db` cambiando solo el esquema; puerto de Postgres sin publicar.
+- [Easypanel asigna un dominio automático al backend] → API accesible sin pasar por el proxy, contra la consigna. Mitigación: tarea explícita de quitarlo con captura de Domains vacío.
+- [Nginx arranca antes que el backend o con `API_UPSTREAM` mal escrito] → frontend reiniciándose o `/api/` en 502. Mitigación: decisión 4 y tabla de diagnóstico (logs del frontend, nombre interno, puerto).
+- [Rutas sin barra final detrás de HTTPS] → el 307 de FastAPI redirige a `http://` y pierde el esquema. Mitigación: el JS ya usa siempre la barra final (I-02..I-04); en la verificación pública se revisa la pestaña Red.
+- [La migración falla contra `global_db` (clave mal copiada, servicio Postgres todavía no listo)] → el contenedor sale y Swarm lo reinicia en bucle. Mitigación: la base es nueva y su usuario es el generado por Easypanel; revisar logs del backend antes de seguir.
+- [Retirar el TP antes de validar el Global] → sin ningún backend en línea. Mitigación: decisión 9 (solo tras §5, con confirmación).
+- [Captura con un secreto visible commiteada] → queda en el historial de Git. Mitigación: revisión de cada `I-05-*.png` antes de `git add`; si se filtra algo, rotar la clave en Easypanel además de reescribir el archivo.
+- [Cambios en el repo después del deploy] → la revisión de `DEPLOY.md` no coincide con la desplegada. Mitigación: registrar el commit que muestra Easypanel; I-06 redespliega y actualiza la revisión final.
+
+## Migration Plan
+
+1. Repo: corregir `backend/.dockerignore`, comentar `backend/env.example`, crear `frontend/env.example`, preparar `DEPLOY.md`; `pytest` del backend sigue pasando; chequeo de secretos; commit y push a `main` (push con confirmación).
+2. Easypanel desde la GUI (con confirmación por paso): servicio Postgres `global_db` → servicio `backend` (Environment, Deploy, logs de migración, salud en Console, quitar dominio) → seed único → servicio `frontend` (Environment, Domains, Deploy) → comprobaciones públicas → redespliegue del backend para probar persistencia → (por SSH, con confirmación) retiro del contenedor `libreria` del TP y de la regla `ufw` del 8000.
+3. Repo: completar `DEPLOY.md` con URL, commit y resultados; agregar evidencia; marcar I-05 en `CHANGES.md` al archivar.
+
+**Rollback**: los servicios nuevos (`global_db`, `backend`, `frontend`) se pueden detener o borrar desde Easypanel sin afectar a `gordos_programacion_db` ni a su base `libreria`. Si `global_db` queda en mal estado, se puede borrar y recrear antes de la entrega; después de I-06 no se vuelve a correr el seed. El retiro del TP se revierte relanzando el `docker run` del antecedente y `ufw allow 8000/tcp` (la base `libreria` sigue intacta). Los cambios del repo son de configuración y documentación y se revierten con `git revert`.
+
+## Open Questions
+
+- Ninguna bloqueante. Resuelto por el grupo: proyecto `gordos_programacion`, servicios `backend` y `frontend` (`API_UPSTREAM=gordos_programacion_backend:8000`), Postgres nuevo `global_db` (host interno `gordos_programacion_global_db`), retiro del TP al final. Pendiente de observar en la GUI: el nombre exacto del host interno que muestra Easypanel (se contrasta con la «Internal Connection URL»).
