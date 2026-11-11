@@ -168,7 +168,7 @@ GATE 5: I-04 ✓ + I-05 ✓
   - `frontend/public/js/altas.js`, `validaciones.js`, `libros.html`, `clientes.html`
 
 ### [I-04] `ventas-historial-api`
-- **Estado**: `[ ]` pendiente
+- **Estado**: `[x]` completado (archivado en `openspec/changes/archive/2026-11-11-ventas-historial-api`)
 - **Scope**:
   - Borrador de venta **en memoria**: cliente desde la API, libros desde el catálogo de la API, cambiar cantidades, quitar renglones
   - Validación previa: ≥ 1 renglón, cantidades enteras positivas, un solo renglón por libro

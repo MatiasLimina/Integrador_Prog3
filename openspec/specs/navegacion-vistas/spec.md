@@ -46,13 +46,6 @@ Cada vista MUST ofrecer como primer elemento enfocable un enlace "Saltar al cont
 - **WHEN** se carga una vista y se presiona Tab una vez
 - **THEN** el foco queda en "Saltar al contenido" y al activarlo el foco pasa al contenido principal
 
-### Requirement: Aviso de maqueta de la etapa 1
-Cada vista MUST mostrar un aviso visible que indique que los datos son de ejemplo y que las operaciones todavía no se guardan, para no presentar controles pendientes como operaciones completas.
-
-#### Scenario: Aviso visible
-- **WHEN** se abre cualquiera de las cinco vistas
-- **THEN** se lee un aviso de maqueta dentro del contenido principal
-
 ### Requirement: Campos con etiqueta asociada
 Todo control de formulario MUST tener una etiqueta asociada mediante `<label for>` cuyo valor coincida con el `id` del control; los grupos de opciones MUST usar `<fieldset>` con `<legend>`.
 

@@ -13,8 +13,12 @@ El frontend SHALL servirse por HTTP en el puerto interno 80, entregando los arch
 - **THEN** responde 200 con el contenido de `public/index.html` y la vista Catálogo se ve con sus estilos
 
 #### Scenario: Páginas y recursos por ruta relativa
-- **WHEN** se piden `/libros.html`, `/css/estilos.css` y `/js/datos.js`
+- **WHEN** se piden `/libros.html`, `/css/estilos.css` y `/js/api.js`
 - **THEN** cada uno responde 200 con el archivo correspondiente de `public/`
+
+#### Scenario: Archivos eliminados no se sirven
+- **WHEN** con la imagen reconstruida se piden `/js/datos.js` y `/js/persistencia.js`
+- **THEN** cada uno responde 404
 
 ### Requirement: Rutas inexistentes responden 404
 Toda ruta fuera de `/api/` que no corresponda a un archivo o carpeta de `public/` MUST responder 404; el servidor MUST NOT devolver `index.html` como respaldo.
