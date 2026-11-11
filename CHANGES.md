@@ -190,7 +190,7 @@ GATE 5: I-04 ✓ + I-05 ✓
 ## FASE 3 — Despliegue y entrega (Ej. 5)
 
 ### [I-05] `despliegue-easypanel`
-- **Estado**: `[ ]` pendiente
+- **Estado**: `[x]` completado (archivado en `openspec/changes/archive/2026-11-11-despliegue-easypanel`)
 - **Scope**:
   - Verificar `backend/` listo (código, `requirements.txt`, `alembic.ini`, `migrations/`, `env.example`, Dockerfile, `.dockerignore`) y pushear con los Dockerfiles y la plantilla de Nginx
   - Servicio App **backend**: Build Path `/backend`, builder Dockerfile; `DATABASE_URL` (`postgresql+asyncpg`) en Environment; Postgres privado; confirmar `alembic upgrade head` en logs; salud desde Shell → 200; correr `python -m scripts.seed` (vacía tablas: revisar antes); **sin dominio público**
