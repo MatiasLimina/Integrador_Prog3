@@ -193,11 +193,19 @@
     };
   }
 
+  // Texto de un ID -> número si es un entero entre 1 y 2147483647; si no, null.
+  function idEntero(texto) {
+    var id = comoEntero(comoTexto(texto).trim());
+    if (id === null || id < 1 || id > ENTERO_MAXIMO) {
+      return null;
+    }
+    return id;
+  }
+
   // Valida el ID escrito para buscar un cliente: entero entre 1 y 2147483647.
   function validarIdCliente(texto) {
-    var recortado = comoTexto(texto).trim();
-    var id = comoEntero(recortado);
-    if (id === null || id < 1 || id > ENTERO_MAXIMO) {
+    var id = idEntero(texto);
+    if (id === null) {
       return {
         valido: false,
         errores: ["El ID debe ser un entero entre 1 y 2147483647."],
@@ -207,72 +215,92 @@
     return { valido: true, errores: [], id: id };
   }
 
-  // Valida una venta (RN-15, RN-16, RN-20). Pura: no toca DOM ni datos.
-  function validarVenta(entrada, clientes, libros) {
-    var datos = entrada || {};
-    var coleccionClientes = clientes || [];
-    var coleccionLibros = libros || [];
+  // Valida el ID de un libro elegido en el selector: entero entre 1 y 2147483647.
+  function validarIdLibro(texto) {
+    var id = idEntero(texto);
+    if (id === null) {
+      return { valido: false, errores: ["Elegí un libro."], id: null };
+    }
+    return { valido: true, errores: [], id: id };
+  }
+
+  // Valida el identificador de venta de `?venta=N`: entero entre 1 y 2147483647.
+  function validarIdVenta(texto) {
+    var id = idEntero(texto);
+    if (id === null) {
+      return {
+        valido: false,
+        errores: ["El identificador de venta no es válido."],
+        id: null
+      };
+    }
+    return { valido: true, errores: [], id: id };
+  }
+
+  // Valida una cantidad escrita: entero entre 1 y 2147483647 (recortado). Pura.
+  function validarCantidad(texto) {
+    var id = idEntero(texto);
+    if (id === null) {
+      return {
+        valido: false,
+        errores: ["La cantidad debe ser un entero entre 1 y 2147483647."],
+        cantidad: null
+      };
+    }
+    return { valido: true, errores: [], cantidad: id };
+  }
+
+  // Valida una venta (RN-15, RN-16, RN-17, RN-20). Pura: no toca DOM ni datos.
+  // `renglones` es el borrador [{libro_id, titulo, precio, cantidad}]; el cuerpo solo
+  // lleva {libro_id, cantidad}. La existencia de cliente y libros la decide la API.
+  function validarVenta(clienteId, renglones) {
+    var lista = renglones || [];
     var errores = [];
 
-    var clienteIdTexto = comoTexto(datos.clienteId).trim();
-    if (clienteIdTexto === "") {
+    var cliente = idEntero(clienteId);
+    if (cliente === null) {
       errores.push("Elegí un cliente.");
-    } else {
-      var clienteEncontrado = null;
-      for (var c = 0; c < coleccionClientes.length; c++) {
-        if (String(coleccionClientes[c].id) === clienteIdTexto) {
-          clienteEncontrado = coleccionClientes[c];
-          break;
-        }
-      }
-      if (!clienteEncontrado) {
-        errores.push("Elegí un cliente.");
-      }
     }
 
-    var renglonesEntrada = datos.renglones || [];
-    if (!renglonesEntrada || renglonesEntrada.length === 0) {
+    if (lista.length === 0) {
       errores.push("La venta debe tener al menos un renglón.");
     }
 
-    var renglonesNormalizados = [];
-    for (var i = 0; i < renglonesEntrada.length; i++) {
-      var renglon = renglonesEntrada[i] || {};
-      var libroIdTexto = comoTexto(renglon.libroId).trim();
-      var libroEncontrado = null;
-      for (var l = 0; l < coleccionLibros.length; l++) {
-        if (String(coleccionLibros[l].id) === libroIdTexto) {
-          libroEncontrado = coleccionLibros[l];
-          break;
-        }
+    var cuerpoRenglones = [];
+    var vistos = {};
+    var errorLibro = false;
+    var errorCantidad = false;
+    var errorRepetido = false;
+    for (var i = 0; i < lista.length; i++) {
+      var renglon = lista[i] || {};
+      var libro = idEntero(renglon.libro_id);
+      if (libro === null) {
+        errorLibro = true;
+      } else if (vistos[libro]) {
+        errorRepetido = true;
+      } else {
+        vistos[libro] = true;
       }
-      if (!libroEncontrado) {
-        errores.push("El libro seleccionado no existe.");
+      var cantidad = idEntero(renglon.cantidad);
+      if (cantidad === null) {
+        errorCantidad = true;
       }
-
-      var cantidadTexto = comoTexto(renglon.cantidad).trim();
-      var cantidad = Number(cantidadTexto);
-      var cantidadValida = cantidadTexto !== "" && !isNaN(cantidad) &&
-        cantidad > 0 && Math.floor(cantidad) === cantidad;
-      if (!cantidadValida) {
-        errores.push("La cantidad debe ser un entero mayor que cero.");
-      }
-
-      renglonesNormalizados.push({
-        libroId: libroIdTexto === "" ? "" : Number(libroIdTexto),
-        cantidad: cantidadValida ? cantidad : Number(cantidadTexto) || 0
-      });
+      cuerpoRenglones.push({ libro_id: libro, cantidad: cantidad });
     }
-
-    var datosNormalizados = {
-      clienteId: clienteIdTexto === "" ? "" : Number(clienteIdTexto),
-      renglones: renglonesNormalizados
-    };
+    if (errorLibro) {
+      errores.push("Hay un renglón con un libro no válido.");
+    }
+    if (errorCantidad) {
+      errores.push("La cantidad debe ser un entero entre 1 y 2147483647.");
+    }
+    if (errorRepetido) {
+      errores.push("Un libro no puede repetirse en la venta.");
+    }
 
     return {
       valido: errores.length === 0,
       errores: errores,
-      datosNormalizados: datosNormalizados
+      cuerpo: { cliente_id: cliente, renglones: cuerpoRenglones }
     };
   }
 
@@ -281,6 +309,9 @@
     validarAutoria: validarAutoria,
     validarCliente: validarCliente,
     validarIdCliente: validarIdCliente,
+    validarIdVenta: validarIdVenta,
+    validarIdLibro: validarIdLibro,
+    validarCantidad: validarCantidad,
     validarVenta: validarVenta
   };
 })();

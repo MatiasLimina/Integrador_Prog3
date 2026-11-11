@@ -1,6 +1,25 @@
 (function () {
   "use strict";
 
+  var MENSAJE_RESPUESTA_INVALIDA = "El servidor devolvió una respuesta inesperada. Intentá de nuevo.";
+
+  // ---------------------------------------------------------------
+  // Estado de la consulta
+  // ---------------------------------------------------------------
+  var consulta = { limit: 20, offset: 0 };
+  var numeroSolicitud = 0;
+  var numeroDetalle = 0;
+  var botonOrigenDetalle = null;
+  var cantidadPaginaActual = 0;
+  var finDelListado = false;
+
+  // ---------------------------------------------------------------
+  // Utilidades del DOM
+  // ---------------------------------------------------------------
+  function porId(id) {
+    return document.getElementById(id);
+  }
+
   function escribirCampo(contenedor, campo, valor) {
     var elementos = contenedor.querySelectorAll("[data-campo]");
     for (var i = 0; i < elementos.length; i++) {
@@ -10,155 +29,381 @@
     }
   }
 
-  function formatearImporte(valor) {
-    return Number(valor).toFixed(2);
-  }
-
   function dosDigitos(numero) {
     return numero < 10 ? "0" + numero : String(numero);
   }
 
-  // Ambos formatos usan la fecha local, para que el texto y el datetime coincidan.
-  function fechaCorta(iso) {
-    var fecha = new Date(iso);
-    if (isNaN(fecha.getTime())) {
-      return String(iso);
-    }
-    return dosDigitos(fecha.getDate()) + "/" + dosDigitos(fecha.getMonth() + 1) + "/" + fecha.getFullYear();
+  // Texto de un dato de la API: nunca se muestra "undefined" ni "null".
+  function texto(valor) {
+    return valor === undefined || valor === null ? "—" : String(valor);
   }
 
-  function fechaIsoCorta(iso) {
-    var fecha = new Date(iso);
-    if (isNaN(fecha.getTime())) {
-      return String(iso).slice(0, 10);
-    }
-    return fecha.getFullYear() + "-" + dosDigitos(fecha.getMonth() + 1) + "-" + dosDigitos(fecha.getDate());
-  }
-
-  function obtenerMensajes() {
-    return {
-      vacio: document.getElementById("historial-mensaje-vacio")
-    };
-  }
-
-  function renderHistorial() {
-    var lista = document.getElementById("historial-lista");
-    var plantillaFila = document.getElementById("plantilla-fila-venta");
-    var contenedorDetalles = document.getElementById("historial-detalles");
-    var plantillaDetalle = document.getElementById("plantilla-detalle-venta");
-    var plantillaFilaRenglon = document.getElementById("plantilla-fila-renglon-detalle");
-    var mensajes = obtenerMensajes();
-
-    if (!lista || !plantillaFila) {
+  // Escribe la fecha en la celda del campo "fecha": `dd/mm/aaaa hh:mm` local dentro de un
+  // <time> creado aquí, con `datetime` = toISOString(). Si no es una fecha válida, texto plano.
+  function escribirFecha(contenedor, valor) {
+    var celda = contenedor.querySelector("[data-campo=\"fecha\"]");
+    var fecha = new Date(valor);
+    if (valor === undefined || valor === null || isNaN(fecha.getTime())) {
+      celda.textContent = texto(valor);
       return;
     }
+    var tiempo = document.createElement("time");
+    tiempo.textContent = dosDigitos(fecha.getDate()) + "/" + dosDigitos(fecha.getMonth() + 1) + "/" +
+      fecha.getFullYear() + " " + dosDigitos(fecha.getHours()) + ":" + dosDigitos(fecha.getMinutes());
+    tiempo.setAttribute("datetime", fecha.toISOString());
+    celda.replaceChildren(tiempo);
+  }
 
-    var ventas = window.Datos.ventas;
-    var fragmentoLista = document.createDocumentFragment();
+  function nombreCliente(venta) {
+    return texto(venta.cliente && typeof venta.cliente === "object" ? venta.cliente.nombre : undefined);
+  }
+
+  function mensajeDe(error) {
+    return error && typeof error.mensaje === "string" ? error.mensaje : MENSAJE_RESPUESTA_INVALIDA;
+  }
+
+  // ---------------------------------------------------------------
+  // Lógica de paginación (misma que el Catálogo)
+  // ---------------------------------------------------------------
+
+  // La API no informa el total: si la página llegó completa puede haber más;
+  // si llegó incompleta, es la última. Si el total es múltiplo exacto de
+  // `limite`, la página siguiente vendrá vacía y lo resuelve `finDelListado`.
+  function hayPaginaSiguiente(cantidadRecibida, limite) {
+    return cantidadRecibida === limite;
+  }
+
+  // ---------------------------------------------------------------
+  // Renderizado del listado
+  // ---------------------------------------------------------------
+  function mostrarEstado(nombre) {
+    var mensajes = {
+      cargando: porId("historial-mensaje-cargando"),
+      vacio: porId("historial-mensaje-vacio"),
+      error: porId("historial-mensaje-error")
+    };
+    for (var clave in mensajes) {
+      if (Object.prototype.hasOwnProperty.call(mensajes, clave)) {
+        mensajes[clave].hidden = clave !== nombre;
+      }
+    }
+    porId("historial-tabla").hidden = nombre !== "resultados";
+
+    var cargando = nombre === "cargando";
+    porId("historial-limite").disabled = cargando;
+    if (cargando) {
+      porId("historial-anterior").disabled = true;
+      porId("historial-siguiente").disabled = true;
+    }
+  }
+
+  function renderListado(ventas) {
+    var lista = porId("historial-lista");
+    var plantilla = porId("plantilla-fila-venta");
+    var fragmento = document.createDocumentFragment();
     for (var i = 0; i < ventas.length; i++) {
       var venta = ventas[i];
-      var clon = plantillaFila.content.firstElementChild.cloneNode(true);
-      clon.setAttribute("data-venta-id", String(venta.id));
-
-      escribirCampo(clon, "id", String(venta.id));
-      var celdaFecha = clon.querySelector('[data-campo="fecha"]');
-      if (celdaFecha) {
-        var timeEl = celdaFecha.querySelector("time");
-        if (timeEl) {
-          timeEl.setAttribute("datetime", fechaIsoCorta(venta.fecha));
-          timeEl.textContent = fechaCorta(venta.fecha);
-        } else {
-          celdaFecha.textContent = fechaCorta(venta.fecha);
-        }
+      if (!venta || typeof venta !== "object" || venta.id === undefined || venta.id === null) {
+        continue; // fila sin la forma de una venta: se omite
       }
-      escribirCampo(clon, "cliente", venta.clienteNombre || "");
-      escribirCampo(clon, "total", formatearImporte(venta.total));
-
-      var enlace = clon.querySelector('a[data-accion="ver-detalle"]');
-      if (enlace) {
-        enlace.setAttribute("data-venta-id", String(venta.id));
-        enlace.setAttribute("href", "#detalle-venta-" + venta.id);
-        var contexto = clon.querySelector('[data-campo="contextoVenta"]');
-        if (contexto) {
-          contexto.textContent = "de la venta " + venta.id;
-        }
-      }
-
-      fragmentoLista.appendChild(clon);
+      var fila = plantilla.content.firstElementChild.cloneNode(true);
+      fila.setAttribute("data-venta-id", String(venta.id));
+      escribirCampo(fila, "id", String(venta.id));
+      escribirFecha(fila, venta.fecha);
+      escribirCampo(fila, "cliente", nombreCliente(venta));
+      escribirCampo(fila, "total", texto(venta.total));
+      escribirCampo(fila, "contextoVenta", "de la venta " + String(venta.id));
+      fragmento.appendChild(fila);
     }
-    lista.replaceChildren(fragmentoLista);
+    lista.replaceChildren(fragmento);
+  }
 
-    if (mensajes.vacio) {
-      mensajes.vacio.hidden = ventas.length !== 0;
+  function renderPaginacion(cantidad) {
+    var rango = porId("historial-rango");
+    if (cantidad > 0) {
+      var texto = "Ventas " + (consulta.offset + 1) + "–" + (consulta.offset + cantidad);
+      rango.textContent = finDelListado ? texto + ". No hay más ventas." : texto;
+    } else {
+      rango.textContent = "";
     }
+    porId("historial-anterior").disabled = consulta.offset === 0;
+    porId("historial-siguiente").disabled =
+      finDelListado || !hayPaginaSiguiente(cantidad, consulta.limit);
+  }
 
-    if (contenedorDetalles && plantillaDetalle && plantillaFilaRenglon) {
-      // conservar el h2 inicial: limpiar solo los article.detalle-venta existentes
-      var existentes = contenedorDetalles.querySelectorAll("article.detalle-venta");
-      for (var e = 0; e < existentes.length; e++) {
-        existentes[e].parentNode.removeChild(existentes[e]);
+  // Devuelve el control de paginación que tenía el foco (o null).
+  function controlPaginacionEnfocado() {
+    var activo = document.activeElement;
+    var ids = ["historial-anterior", "historial-siguiente", "historial-limite"];
+    for (var i = 0; i < ids.length; i++) {
+      if (activo === porId(ids[i])) {
+        return activo;
       }
-      for (var v = 0; v < ventas.length; v++) {
-        var ventaDet = ventas[v];
-        var clonDet = plantillaDetalle.content.firstElementChild.cloneNode(true);
-        clonDet.setAttribute("data-venta-id", String(ventaDet.id));
-        clonDet.setAttribute("id", "detalle-venta-" + ventaDet.id);
+    }
+    return null;
+  }
 
-        var encabezado = clonDet.querySelector('[data-campo="encabezadoDetalle"]');
-        if (encabezado) {
-          encabezado.textContent = "Detalle de la venta " + ventaDet.id;
+  // Los controles se deshabilitan mientras carga y el foco cae al <body>:
+  // se devuelve al mismo control, a otro botón de paginación habilitado o al título.
+  function restaurarFoco(control) {
+    if (!control) {
+      return;
+    }
+    var candidatos = [control, porId("historial-siguiente"), porId("historial-anterior")];
+    for (var i = 0; i < candidatos.length; i++) {
+      if (!candidatos[i].disabled) {
+        candidatos[i].focus();
+        return;
+      }
+    }
+    porId("titulo-historial-listado").focus();
+  }
+
+  // ---------------------------------------------------------------
+  // Carga del listado (GET /ventas/ con limit y offset)
+  // ---------------------------------------------------------------
+  function mostrarErrorListado(mensaje) {
+    // Nunca se deja a la vista un listado incompleto tras un error.
+    renderListado([]);
+    cantidadPaginaActual = 0;
+    porId("historial-mensaje-error-texto").textContent = mensaje;
+    mostrarEstado("error");
+    porId("historial-rango").textContent = "";
+    porId("historial-anterior").disabled = consulta.offset === 0;
+    porId("historial-siguiente").disabled = true;
+  }
+
+  function cargarListado(opciones) {
+    var desdeSiguiente = !!(opciones && opciones.desdeSiguiente === true);
+    var controlConFoco = (opciones && opciones.controlConFoco) || controlPaginacionEnfocado();
+    numeroSolicitud += 1;
+    var miSolicitud = numeroSolicitud;
+    var consultaPedida = { limit: consulta.limit, offset: consulta.offset };
+    mostrarEstado("cargando");
+
+    return Api.pedir("/ventas/", { parametros: consultaPedida }).then(
+      function (ventas) {
+        if (miSolicitud !== numeroSolicitud) {
+          return;
         }
-        escribirCampo(clonDet, "id", String(ventaDet.id));
-        var celdaFechaDet = clonDet.querySelector('[data-campo="fecha"]');
-        if (celdaFechaDet) {
-          var timeDet = celdaFechaDet.querySelector("time");
-          if (timeDet) {
-            timeDet.setAttribute("datetime", fechaIsoCorta(ventaDet.fecha));
-            timeDet.textContent = fechaCorta(ventaDet.fecha);
-          } else {
-            celdaFechaDet.textContent = fechaCorta(ventaDet.fecha);
+        if (!Array.isArray(ventas)) {
+          mostrarErrorListado(MENSAJE_RESPUESTA_INVALIDA);
+          restaurarFoco(controlConFoco);
+          return;
+        }
+        if (ventas.length === 0 && consultaPedida.offset > 0) {
+          if (desdeSiguiente) {
+            // Fin del listado: se vuelve a la página anterior y se conservan sus filas en pantalla.
+            consulta.offset = Math.max(0, consultaPedida.offset - consultaPedida.limit);
+            finDelListado = true;
+            mostrarEstado("resultados");
+            renderPaginacion(cantidadPaginaActual);
+            restaurarFoco(controlConFoco);
+            return;
           }
+          // Página vacía por otro motivo (p. ej. cambió el total): se vuelve al inicio.
+          consulta.offset = 0;
+          cargarListado({ controlConFoco: controlConFoco });
+          return;
         }
-        escribirCampo(clonDet, "cliente", ventaDet.clienteNombre || "");
-        escribirCampo(clonDet, "total", formatearImporte(ventaDet.total));
-
-        var caption = clonDet.querySelector('[data-campo="captionTabla"]');
-        if (caption) {
-          caption.textContent = "Renglones confirmados de la venta " + ventaDet.id;
+        finDelListado = false;
+        cantidadPaginaActual = ventas.length;
+        if (ventas.length === 0) {
+          renderListado([]);
+          mostrarEstado("vacio");
+          renderPaginacion(0);
+          restaurarFoco(controlConFoco);
+          return;
         }
-
-        var tbody = clonDet.querySelector('tbody[data-campo="renglones"]');
-        if (tbody) {
-          var fragmentoRenglones = document.createDocumentFragment();
-          for (var r = 0; r < ventaDet.renglones.length; r++) {
-            var renglon = ventaDet.renglones[r];
-            var clonR = plantillaFilaRenglon.content.firstElementChild.cloneNode(true);
-            escribirCampo(clonR, "titulo", renglon.titulo);
-            escribirCampo(clonR, "cantidad", String(renglon.cantidad));
-            escribirCampo(clonR, "precioUnitario", formatearImporte(renglon.precioUnitario));
-            escribirCampo(clonR, "subtotal", formatearImporte(renglon.subtotal));
-            fragmentoRenglones.appendChild(clonR);
-          }
-          tbody.replaceChildren(fragmentoRenglones);
+        renderListado(ventas);
+        mostrarEstado("resultados");
+        renderPaginacion(ventas.length);
+        restaurarFoco(controlConFoco);
+      },
+      function (error) {
+        if (miSolicitud !== numeroSolicitud) {
+          return;
         }
-
-        contenedorDetalles.appendChild(clonDet);
+        mostrarErrorListado(mensajeDe(error));
+        restaurarFoco(controlConFoco);
       }
+    );
+  }
+
+  // ---------------------------------------------------------------
+  // Detalle de la venta (GET /ventas/{id}, sin barra final)
+  // ---------------------------------------------------------------
+  function limpiarDetalle() {
+    var contenido = porId("detalle-contenido");
+    escribirCampo(contenido, "id", "");
+    escribirCampo(contenido, "cliente", "");
+    escribirCampo(contenido, "total", "");
+    escribirCampo(contenido, "fecha", "");
+    porId("detalle-renglones").replaceChildren();
+  }
+
+  function mostrarEstadoDetalle(nombre) {
+    porId("detalle-mensaje-cargando").hidden = nombre !== "cargando";
+    porId("detalle-mensaje-error").hidden = nombre !== "error";
+    porId("detalle-contenido").hidden = nombre !== "datos";
+  }
+
+  function ventaTieneForma(venta) {
+    return !!venta && typeof venta === "object" && !Array.isArray(venta) &&
+      venta.id !== undefined && venta.id !== null &&
+      !!venta.cliente && typeof venta.cliente === "object" &&
+      Array.isArray(venta.renglones);
+  }
+
+  // Los importes se escriben tal como llegan en la respuesta: sin conversiones ni cálculos.
+  function renderDetalle(venta) {
+    var contenido = porId("detalle-contenido");
+    escribirCampo(contenido, "id", texto(venta.id));
+    escribirFecha(contenido, venta.fecha);
+    escribirCampo(contenido, "cliente", nombreCliente(venta));
+    escribirCampo(contenido, "total", texto(venta.total));
+
+    var plantilla = porId("plantilla-fila-renglon-detalle");
+    var fragmento = document.createDocumentFragment();
+    for (var i = 0; i < venta.renglones.length; i++) {
+      var renglon = venta.renglones[i] || {};
+      var fila = plantilla.content.firstElementChild.cloneNode(true);
+      escribirCampo(fila, "titulo", texto(renglon.titulo));
+      escribirCampo(fila, "cantidad", texto(renglon.cantidad));
+      escribirCampo(fila, "precioUnitario", texto(renglon.precio_unitario));
+      escribirCampo(fila, "subtotal", texto(renglon.subtotal));
+      fragmento.appendChild(fila);
     }
+    porId("detalle-renglones").replaceChildren(fragmento);
+  }
+
+  function actualizarDireccion(parametro) {
+    try {
+      history.replaceState(null, "", location.pathname + (parametro === null ? "" : "?venta=" + parametro));
+    } catch (e) {
+      // Sin historial (p. ej. contexto restringido): el detalle sigue funcionando sin enlace directo.
+    }
+  }
+
+  function mostrarErrorDetalle(mensaje) {
+    limpiarDetalle();
+    porId("detalle-mensaje-error").textContent = mensaje;
+    mostrarEstadoDetalle("error");
+  }
+
+  function abrirDetalle(id, boton) {
+    numeroDetalle += 1;
+    var miDetalle = numeroDetalle;
+    botonOrigenDetalle = boton || null;
+
+    limpiarDetalle();
+    porId("historial-detalle").hidden = false;
+    mostrarEstadoDetalle("cargando");
+    porId("titulo-historial-detalle").focus();
+    actualizarDireccion(String(id));
+
+    Api.pedir("/ventas/" + id).then(
+      function (venta) {
+        if (miDetalle !== numeroDetalle) {
+          return;
+        }
+        if (!ventaTieneForma(venta)) {
+          mostrarErrorDetalle(MENSAJE_RESPUESTA_INVALIDA);
+          return;
+        }
+        renderDetalle(venta);
+        mostrarEstadoDetalle("datos");
+      },
+      function (error) {
+        if (miDetalle !== numeroDetalle) {
+          return;
+        }
+        mostrarErrorDetalle(mensajeDe(error));
+      }
+    );
+  }
+
+  function abrirDetalleInvalido(mensaje) {
+    numeroDetalle += 1;
+    botonOrigenDetalle = null;
+    porId("historial-detalle").hidden = false;
+    mostrarErrorDetalle(mensaje);
+    porId("titulo-historial-detalle").focus();
+  }
+
+  function cerrarDetalle() {
+    numeroDetalle += 1;
+    porId("historial-detalle").hidden = true;
+    actualizarDireccion(null);
+    if (botonOrigenDetalle && document.contains(botonOrigenDetalle)) {
+      botonOrigenDetalle.focus();
+    } else {
+      // La fila de origen ya no existe (o se abrió por dirección): foco a un punto estable.
+      porId("titulo-historial-listado").focus();
+    }
+    botonOrigenDetalle = null;
+  }
+
+  // ---------------------------------------------------------------
+  // Manejadores de eventos
+  // ---------------------------------------------------------------
+  function alCambiarLimite() {
+    consulta.limit = Number(porId("historial-limite").value);
+    consulta.offset = 0;
+    finDelListado = false;
+    cargarListado();
+  }
+
+  function alPresionarAnterior() {
+    consulta.offset = Math.max(0, consulta.offset - consulta.limit);
+    finDelListado = false;
+    cargarListado();
+  }
+
+  function alPresionarSiguiente() {
+    consulta.offset += consulta.limit;
+    cargarListado({ desdeSiguiente: true });
+  }
+
+  function alHacerClicEnLista(evento) {
+    var boton = evento.target.closest("button[data-accion=\"ver-detalle\"]");
+    if (!boton) {
+      return;
+    }
+    var fila = boton.closest("tr[data-venta-id]");
+    if (fila) {
+      abrirDetalle(fila.getAttribute("data-venta-id"), boton);
+    }
+  }
+
+  // Si la dirección trae ?venta=N, se abre ese detalle (o se informa que N no es válido).
+  function abrirDetalleDesdeDireccion() {
+    var valor = new URLSearchParams(location.search).get("venta");
+    if (valor === null) {
+      return;
+    }
+    var resultado = Validaciones.validarIdVenta(valor);
+    if (!resultado.valido) {
+      abrirDetalleInvalido(resultado.errores[0]);
+      return;
+    }
+    abrirDetalle(resultado.id, null);
   }
 
   function inicializarHistorial() {
-    var lista = document.getElementById("historial-lista");
-    if (!lista) {
-      return;
-    }
-    renderHistorial();
-  }
+    porId("historial-limite").addEventListener("change", alCambiarLimite);
+    porId("historial-anterior").addEventListener("click", alPresionarAnterior);
+    porId("historial-siguiente").addEventListener("click", alPresionarSiguiente);
+    porId("historial-reintentar").addEventListener("click", function () {
+      cargarListado();
+    });
+    porId("historial-lista").addEventListener("click", alHacerClicEnLista);
+    porId("detalle-volver").addEventListener("click", cerrarDetalle);
 
-  window.Historial = {
-    renderHistorial: renderHistorial,
-    inicializarHistorial: inicializarHistorial
-  };
+    consulta.limit = Number(porId("historial-limite").value);
+    cargarListado();
+    abrirDetalleDesdeDireccion();
+  }
 
   inicializarHistorial();
 })();

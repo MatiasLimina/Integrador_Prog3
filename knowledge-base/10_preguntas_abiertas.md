@@ -6,7 +6,7 @@
 1. _(Resuelta: multipágina)_ ¿Multipágina o una sola página con secciones? (la consigna permite ambas).
 2. _(Obsoleta en el Global)_ ¿Formato de identificador de venta y de fecha (ISO, local)?
 3. _(Obsoleta en el Global)_ ¿Claves y estructura exactas de localStorage? Deben quedar en el README para la prueba del precio histórico.
-4. _(Parcialmente resuelta en el Global: el backend rechaza duplicados con 422; la UX — sumar cantidad o rechazar — la decide I-04 según RN-17)_ ¿Qué mensaje/regla se aplica ante libro repetido: sumar cantidad o rechazar? (la consigna acepta ambos; elegir y documentar).
+4. _(Resuelta en I-04: el libro repetido se suma a la cantidad del renglón existente; el backend rechaza duplicados con 422 como defensa, ver RN-17)_ ¿Qué mensaje/regla se aplica ante libro repetido: sumar cantidad o rechazar? (la consigna acepta ambos; elegir y documentar).
 
 ## Prioridad baja
 5. ¿Símbolo/moneda de importes?
@@ -52,3 +52,12 @@ Relevadas al migrar las altas de libros y clientes a la API; ninguna requiere ca
 - `orden` repetido entre autorías se acepta; el mismo autor dos veces responde 409 (`pk_libro_autor`), por eso el navegador lo rechaza antes de enviar. Atiende I-03; sin cambios en el backend.
 - `precio` se envía como cadena (`"1500.50"`) para que `Decimal` reciba el valor exacto sin pasar por coma flotante. Atiende I-03; sin cambios en el backend.
 - Ventas e Historial siguen con datos locales: lo registrado por la API en Libros y Clientes no aparece allí hasta I-04. No requiere cambios en el backend.
+
+## Brechas de contrato halladas en I-04
+Relevadas al migrar Ventas e Historial a la API; ninguna requiere cambios en el backend:
+- `GET /ventas/` devuelve las ventas ordenadas por `id` ascendente y sin total: la venta recién registrada queda en la última página. El comprobante ofrece un enlace directo (`historial.html?venta=ID`) y se muestra el rango visible. Atiende I-04; cambiar el orden sería un change de backend aparte.
+- `POST /ventas/` descuenta stock y responde 409 «No hay stock suficiente para el libro indicado.» aunque la consigna trate el stock como dato del catálogo. El borrador no muestra stock: el operador se entera por el 409 y el borrador se conserva. Atiende I-04; sin cambios en el backend.
+- Los importes (`precio_unitario`, `subtotal`, `total`) llegan como cadenas con dos decimales y se muestran tal cual, sin `Number()` ni `toFixed()`. Atiende I-04; sin cambios en el backend.
+- `fecha` llega con microsegundos: el navegador la muestra local `dd/mm/aaaa hh:mm` y usa `toISOString()` (milisegundos) en `<time datetime>`. Atiende I-04; sin cambios en el backend.
+- Los 409 por cliente o libro inexistente y el 422 por libros repetidos de G-06 no se pueden provocar desde la UI normal (los selectores vienen de la API y el borrador suma repetidos). Se verifican alterando el `value` de una opción de «Libro» (409) y desde la consola con `Api.pedir` (409 con `cliente_id: 999` y 422 con dos renglones del mismo libro), comprobando que el historial no cambia. Atiende I-04; sin cambios en el backend.
+- Un fallo de red durante el `POST` es ambiguo: la venta pudo registrarse. El mensaje pide revisar el historial antes de reintentar y el borrador se conserva. Atiende I-04; sin cambios en el backend.

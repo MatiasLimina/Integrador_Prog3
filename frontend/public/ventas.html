@@ -29,6 +29,15 @@
     <section aria-labelledby="titulo-componer-venta">
       <h2 id="titulo-componer-venta">Composición de la venta</h2>
 
+      <p id="venta-mensaje-cargando" class="mensaje mensaje--info" data-estado="cargando" role="status" hidden>
+        Cargando clientes y libros…
+      </p>
+
+      <div id="venta-opciones-error" class="mensaje mensaje--error" data-estado="error-opciones" role="alert" hidden>
+        <p id="venta-opciones-error-texto"></p>
+        <button type="button" id="venta-opciones-reintentar">Reintentar</button>
+      </div>
+
       <form id="form-venta" action="ventas.html" method="get" novalidate>
         <fieldset>
           <legend>Cliente</legend>
@@ -36,9 +45,6 @@
             <label for="venta-cliente">Cliente</label>
             <select id="venta-cliente" name="clienteId" required>
               <option value="">Elegí un cliente</option>
-              <option value="1">María Gómez</option>
-              <option value="2">Juan Pérez</option>
-              <option value="3">Lucía Fernández</option>
             </select>
           </div>
         </fieldset>
@@ -49,16 +55,12 @@
             <label for="venta-libro">Libro</label>
             <select id="venta-libro" name="libroId">
               <option value="">Elegí un libro</option>
-              <option value="1">El jardín de las horas — 1500.00</option>
-              <option value="2">Mapas del silencio — 2000.00</option>
-              <option value="3">Cuentos de medianoche — 3200.50</option>
-              <option value="4">La ciudad invisible — 2750.00</option>
             </select>
           </div>
 
           <div class="campo">
             <label for="venta-cantidad">Cantidad</label>
-            <input type="number" id="venta-cantidad" name="cantidad" min="1" step="1" value="1">
+            <input type="number" id="venta-cantidad" name="cantidad" min="1" max="2147483647" step="1" value="1">
           </div>
 
           <button type="button" id="venta-agregar-renglon" data-accion="agregar-renglon">Agregar renglón</button>
@@ -73,52 +75,16 @@
 
           <div class="tabla-contenedor">
             <table>
-              <caption>Renglones de la venta en curso y resumen del total</caption>
+              <caption>Renglones de la venta en curso (los importes los calcula el servidor al confirmar)</caption>
               <thead>
                 <tr>
                   <th scope="col">Libro</th>
+                  <th scope="col">Precio actual</th>
                   <th scope="col">Cantidad</th>
-                  <th scope="col">Precio unitario</th>
-                  <th scope="col">Subtotal</th>
                   <th scope="col">Acciones</th>
                 </tr>
               </thead>
-              <tbody id="venta-renglones">
-                <tr data-libro-id="1">
-                  <td data-campo="titulo">El jardín de las horas</td>
-                  <td>
-                    <label for="venta-renglon-1-cantidad" class="visualmente-oculto">Cantidad de «El jardín de las horas»</label>
-                    <input type="number" id="venta-renglon-1-cantidad" name="cantidadRenglon" min="1" step="1" value="2" data-accion="cambiar-cantidad">
-                  </td>
-                  <td data-campo="precioUnitario">1500.00</td>
-                  <td data-campo="subtotal">3000.00</td>
-                  <td>
-                    <button type="button" data-accion="quitar-renglon">
-                      Quitar renglón <span class="visualmente-oculto">de «El jardín de las horas»</span>
-                    </button>
-                  </td>
-                </tr>
-                <tr data-libro-id="2">
-                  <td data-campo="titulo">Mapas del silencio</td>
-                  <td>
-                    <label for="venta-renglon-2-cantidad" class="visualmente-oculto">Cantidad de «Mapas del silencio»</label>
-                    <input type="number" id="venta-renglon-2-cantidad" name="cantidadRenglon" min="1" step="1" value="1" data-accion="cambiar-cantidad">
-                  </td>
-                  <td data-campo="precioUnitario">2000.00</td>
-                  <td data-campo="subtotal">2000.00</td>
-                  <td>
-                    <button type="button" data-accion="quitar-renglon">
-                      Quitar renglón <span class="visualmente-oculto">de «Mapas del silencio»</span>
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-              <tfoot>
-                <tr>
-                  <th scope="row" colspan="3">Total</th>
-                  <td colspan="2"><output id="venta-total" data-campo="total">5000.00</output></td>
-                </tr>
-              </tfoot>
+              <tbody id="venta-renglones"></tbody>
             </table>
           </div>
         </fieldset>
@@ -128,23 +94,57 @@
         </p>
 
         <div id="venta-mensaje-error" class="mensaje mensaje--error" data-estado="error" role="alert" hidden>
-          <p>Error: no se pudo confirmar la venta. Revisá:</p>
+          <p>Error: revisá lo siguiente:</p>
           <ul id="venta-errores"></ul>
         </div>
 
         <button type="submit" id="venta-confirmar">Confirmar venta</button>
       </form>
+
+      <section id="venta-registrada" class="detalle-venta" aria-labelledby="titulo-venta-registrada" hidden>
+        <h3 id="titulo-venta-registrada" tabindex="-1">Venta registrada</h3>
+        <dl>
+          <dt>ID</dt>
+          <dd data-campo="id"></dd>
+          <dt>Fecha</dt>
+          <dd data-campo="fecha"></dd>
+          <dt>Cliente</dt>
+          <dd data-campo="cliente"></dd>
+        </dl>
+
+        <div class="tabla-contenedor">
+          <table>
+            <caption>Renglones confirmados de la venta registrada</caption>
+            <thead>
+              <tr>
+                <th scope="col">Libro</th>
+                <th scope="col">Cantidad</th>
+                <th scope="col">Precio unitario</th>
+                <th scope="col">Subtotal</th>
+              </tr>
+            </thead>
+            <tbody data-campo="renglones"></tbody>
+            <tfoot>
+              <tr>
+                <th scope="row" colspan="3">Total</th>
+                <td data-campo="total"></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <p><a id="venta-ver-historial" href="historial.html">Ver en el historial</a></p>
+      </section>
     </section>
 
     <template id="plantilla-fila-renglon">
       <tr data-libro-id="">
         <td data-campo="titulo"></td>
+        <td data-campo="precio"></td>
         <td>
           <label class="visualmente-oculto">Cantidad</label>
-          <input type="number" name="cantidadRenglon" min="1" step="1" value="1" data-accion="cambiar-cantidad">
+          <input type="number" name="cantidadRenglon" min="1" max="2147483647" step="1" value="1" data-accion="cambiar-cantidad">
         </td>
-        <td data-campo="precioUnitario"></td>
-        <td data-campo="subtotal"></td>
         <td>
           <button type="button" data-accion="quitar-renglon">
             Quitar renglón <span class="visualmente-oculto" data-campo="contextoLibro"></span>
@@ -152,14 +152,22 @@
         </td>
       </tr>
     </template>
+
+    <template id="plantilla-fila-registrada">
+      <tr>
+        <td data-campo="titulo"></td>
+        <td data-campo="cantidad"></td>
+        <td data-campo="precioUnitario"></td>
+        <td data-campo="subtotal"></td>
+      </tr>
+    </template>
   </main>
 
   <footer class="pie">
-    <p>TPI Programación III — datos ficticios, sin backend.</p>
+    <p>TPI Programación III — datos ficticios servidos por la API de la librería.</p>
   </footer>
 
-  <script defer src="js/datos.js"></script>
-  <script defer src="js/persistencia.js"></script>
+  <script defer src="js/api.js"></script>
   <script defer src="js/validaciones.js"></script>
   <script defer src="js/ventas.js"></script>
 </body>

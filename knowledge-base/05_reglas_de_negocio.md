@@ -23,14 +23,14 @@
 - **RN-14** Tras alta correcta, listados y selectores se actualizan sin recargar.
 
 ## Ventas (Ej. 5)
-- **RN-15** Requiere cliente existente y ≥ 1 renglón con libro existente.
+- **RN-15** Requiere cliente existente y ≥ 1 renglón con libro existente. _En el Global el cliente y los libros se eligen de listados de la API; el navegador solo valida que haya cliente y ≥ 1 renglón, y la existencia la decide la API (409 si el cliente o un libro no existen)._
 - **RN-16** Cantidad entera > 0 (rechaza 0, negativos, decimales).
-- **RN-17** Sin libros repetidos en la misma venta: se modifica la cantidad del renglón o se informa el duplicado.
+- **RN-17** Sin libros repetidos en la misma venta: se modifica la cantidad del renglón o se informa el duplicado. _En el Global, agregar un libro que ya está en el borrador suma la cantidad a su renglón (el navegador nunca envía repetidos); el 422 de la API ante repetidos queda como defensa._
 - **RN-18** Antes de confirmar se pueden cambiar cantidades y quitar renglones.
-- **RN-19** subtotal = cantidad × precio; total = suma de subtotales; importes con dos decimales. _En el Global el borrador puede mostrar importes provisorios; los importes confirmados (precio unitario, subtotales y total) se muestran siempre desde la respuesta de `POST /ventas/`, sin recalcular (regla dura 4)._
+- **RN-19** subtotal = cantidad × precio; total = suma de subtotales; importes con dos decimales. _En el Global el borrador no muestra importes (solo título, precio actual y cantidad); los importes confirmados (precio unitario, subtotales y total) se muestran siempre desde la respuesta de `POST /ventas/` (comprobante) y de `GET /ventas/{id}` (detalle), sin recalcular (regla dura 4)._
 - **RN-20** No se confirma sin cliente, sin renglones o con cantidades inválidas.
-- **RN-21** Al confirmar se registra id, fecha, cliente, renglones y total; se limpia el formulario y se muestra mensaje de resultado.
-- **RN-22** El precio unitario es **histórico**: se copia al renglón y no se relee del catálogo.
+- **RN-21** Al confirmar se registra id, fecha, cliente, renglones y total; se limpia el formulario y se muestra mensaje de resultado. _En el Global el ID, la fecha, los precios unitarios, los subtotales y el total los asigna la API (`POST /ventas/` → 201); el navegador solo envía `{cliente_id, renglones:[{libro_id, cantidad}]}`._
+- **RN-22** El precio unitario es **histórico**: se copia al renglón y no se relee del catálogo. _En el Global lo guarda la base en el renglón al confirmar; un `PATCH /libros/{id}` posterior no cambia las ventas ya registradas._
 - **RN-23** Ventas confirmadas inmutables: no se editan ni eliminan desde la interfaz.
 
 ## Persistencia (Ej. 6)

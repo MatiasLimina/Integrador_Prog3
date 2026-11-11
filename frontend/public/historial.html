@@ -27,13 +27,20 @@
     <h1>Historial de ventas</h1>
 
     <section id="historial-listado" aria-labelledby="titulo-historial-listado">
-      <h2 id="titulo-historial-listado">Ventas confirmadas</h2>
+      <h2 id="titulo-historial-listado" tabindex="-1">Ventas confirmadas</h2>
 
+      <p id="historial-mensaje-cargando" class="mensaje mensaje--info" data-estado="cargando" role="status" hidden>
+        Cargando ventas…
+      </p>
       <p id="historial-mensaje-vacio" class="mensaje mensaje--info" data-estado="vacio" role="status" hidden>
         Todavía no hay ventas confirmadas.
       </p>
+      <div id="historial-mensaje-error" class="mensaje mensaje--error" data-estado="error" role="alert" hidden>
+        <p id="historial-mensaje-error-texto"></p>
+        <button type="button" id="historial-reintentar">Reintentar</button>
+      </div>
 
-      <div class="tabla-contenedor">
+      <div id="historial-tabla" class="tabla-contenedor" hidden>
         <table>
           <caption>Listado de ventas confirmadas</caption>
           <thead>
@@ -45,156 +52,49 @@
               <th scope="col">Acciones</th>
             </tr>
           </thead>
-          <tbody id="historial-lista">
-            <tr data-venta-id="1">
-              <td data-campo="id">1</td>
-              <td data-campo="fecha"><time datetime="2026-10-01">01/10/2026</time></td>
-              <td data-campo="cliente">María Gómez</td>
-              <td data-campo="total">5000.00</td>
-              <td>
-                <a href="#detalle-venta-1" data-accion="ver-detalle" data-venta-id="1">
-                  Ver detalle <span class="visualmente-oculto">de la venta 1</span>
-                </a>
-              </td>
-            </tr>
-            <tr data-venta-id="2">
-              <td data-campo="id">2</td>
-              <td data-campo="fecha"><time datetime="2026-10-05">05/10/2026</time></td>
-              <td data-campo="cliente">Juan Pérez</td>
-              <td data-campo="total">3200.50</td>
-              <td>
-                <a href="#detalle-venta-2" data-accion="ver-detalle" data-venta-id="2">
-                  Ver detalle <span class="visualmente-oculto">de la venta 2</span>
-                </a>
-              </td>
-            </tr>
-          </tbody>
+          <tbody id="historial-lista"></tbody>
         </table>
+      </div>
+
+      <div class="paginacion" role="group" aria-label="Paginación del historial">
+        <div class="paginacion__limite">
+          <label for="historial-limite">Ventas por página</label>
+          <select id="historial-limite" name="limite">
+            <option value="2">2</option>
+            <option value="5">5</option>
+            <option value="10">10</option>
+            <option value="20" selected>20</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+        </div>
+        <button type="button" id="historial-anterior">Anterior</button>
+        <button type="button" id="historial-siguiente">Siguiente</button>
+        <p id="historial-rango" role="status"></p>
       </div>
     </section>
 
-    <section id="historial-detalles" aria-labelledby="titulo-historial-detalles">
-      <h2 id="titulo-historial-detalles">Detalle de ventas</h2>
+    <section id="historial-detalle" class="detalle-venta" aria-labelledby="titulo-historial-detalle" hidden>
+      <h2 id="titulo-historial-detalle" tabindex="-1">Detalle de la venta</h2>
 
-      <article id="detalle-venta-1" class="detalle-venta" data-venta-id="1">
-        <h3>Detalle de la venta 1</h3>
-        <dl>
-          <dt>Identificador</dt>
-          <dd data-campo="id">1</dd>
-          <dt>Fecha</dt>
-          <dd data-campo="fecha"><time datetime="2026-10-01">01/10/2026</time></dd>
-          <dt>Cliente</dt>
-          <dd data-campo="cliente">María Gómez</dd>
-        </dl>
+      <p id="detalle-mensaje-cargando" class="mensaje mensaje--info" data-estado="cargando" role="status" hidden>
+        Cargando detalle…
+      </p>
+      <p id="detalle-mensaje-error" class="mensaje mensaje--error" data-estado="error" role="alert" hidden></p>
 
-        <div class="tabla-contenedor">
-          <table>
-            <caption>Renglones confirmados de la venta 1</caption>
-            <thead>
-              <tr>
-                <th scope="col">Libro</th>
-                <th scope="col">Cantidad</th>
-                <th scope="col">Precio unitario</th>
-                <th scope="col">Subtotal</th>
-              </tr>
-            </thead>
-            <tbody data-campo="renglones">
-              <tr>
-                <td data-campo="titulo">El jardín de las horas</td>
-                <td data-campo="cantidad">2</td>
-                <td data-campo="precioUnitario">1500.00</td>
-                <td data-campo="subtotal">3000.00</td>
-              </tr>
-              <tr>
-                <td data-campo="titulo">Mapas del silencio</td>
-                <td data-campo="cantidad">1</td>
-                <td data-campo="precioUnitario">2000.00</td>
-                <td data-campo="subtotal">2000.00</td>
-              </tr>
-            </tbody>
-            <tfoot>
-              <tr>
-                <th scope="row" colspan="3">Total</th>
-                <td data-campo="total">5000.00</td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-
-        <p><a href="#historial-listado">Volver al listado</a></p>
-      </article>
-
-      <article id="detalle-venta-2" class="detalle-venta" data-venta-id="2">
-        <h3>Detalle de la venta 2</h3>
-        <dl>
-          <dt>Identificador</dt>
-          <dd data-campo="id">2</dd>
-          <dt>Fecha</dt>
-          <dd data-campo="fecha"><time datetime="2026-10-05">05/10/2026</time></dd>
-          <dt>Cliente</dt>
-          <dd data-campo="cliente">Juan Pérez</dd>
-        </dl>
-
-        <div class="tabla-contenedor">
-          <table>
-            <caption>Renglones confirmados de la venta 2</caption>
-            <thead>
-              <tr>
-                <th scope="col">Libro</th>
-                <th scope="col">Cantidad</th>
-                <th scope="col">Precio unitario</th>
-                <th scope="col">Subtotal</th>
-              </tr>
-            </thead>
-            <tbody data-campo="renglones">
-              <tr>
-                <td data-campo="titulo">Cuentos de medianoche</td>
-                <td data-campo="cantidad">1</td>
-                <td data-campo="precioUnitario">3200.50</td>
-                <td data-campo="subtotal">3200.50</td>
-              </tr>
-            </tbody>
-            <tfoot>
-              <tr>
-                <th scope="row" colspan="3">Total</th>
-                <td data-campo="total">3200.50</td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-
-        <p><a href="#historial-listado">Volver al listado</a></p>
-      </article>
-    </section>
-
-    <template id="plantilla-fila-venta">
-      <tr data-venta-id="">
-        <td data-campo="id"></td>
-        <td data-campo="fecha"><time datetime=""></time></td>
-        <td data-campo="cliente"></td>
-        <td data-campo="total"></td>
-        <td>
-          <a href="#" data-accion="ver-detalle" data-venta-id="">
-            Ver detalle <span class="visualmente-oculto" data-campo="contextoVenta"></span>
-          </a>
-        </td>
-      </tr>
-    </template>
-
-    <template id="plantilla-detalle-venta">
-      <article class="detalle-venta" data-venta-id="">
-        <h3 data-campo="encabezadoDetalle"></h3>
+      <div id="detalle-contenido" hidden>
         <dl>
           <dt>Identificador</dt>
           <dd data-campo="id"></dd>
           <dt>Fecha</dt>
-          <dd data-campo="fecha"><time datetime=""></time></dd>
+          <dd data-campo="fecha"></dd>
           <dt>Cliente</dt>
           <dd data-campo="cliente"></dd>
         </dl>
+
         <div class="tabla-contenedor">
           <table>
-            <caption data-campo="captionTabla"></caption>
+            <caption>Renglones confirmados de la venta</caption>
             <thead>
               <tr>
                 <th scope="col">Libro</th>
@@ -203,7 +103,7 @@
                 <th scope="col">Subtotal</th>
               </tr>
             </thead>
-            <tbody data-campo="renglones"></tbody>
+            <tbody id="detalle-renglones"></tbody>
             <tfoot>
               <tr>
                 <th scope="row" colspan="3">Total</th>
@@ -212,8 +112,23 @@
             </tfoot>
           </table>
         </div>
-        <p><a href="#historial-listado">Volver al listado</a></p>
-      </article>
+      </div>
+
+      <p><button type="button" id="detalle-volver">Volver al listado</button></p>
+    </section>
+
+    <template id="plantilla-fila-venta">
+      <tr data-venta-id="">
+        <td data-campo="id"></td>
+        <td data-campo="fecha"></td>
+        <td data-campo="cliente"></td>
+        <td data-campo="total"></td>
+        <td>
+          <button type="button" data-accion="ver-detalle">
+            Ver detalle <span class="visualmente-oculto" data-campo="contextoVenta"></span>
+          </button>
+        </td>
+      </tr>
     </template>
 
     <template id="plantilla-fila-renglon-detalle">
@@ -227,11 +142,11 @@
   </main>
 
   <footer class="pie">
-    <p>TPI Programación III — datos ficticios, sin backend.</p>
+    <p>TPI Programación III — datos ficticios servidos por la API de la librería.</p>
   </footer>
 
-  <script defer src="js/datos.js"></script>
-  <script defer src="js/persistencia.js"></script>
+  <script defer src="js/api.js"></script>
+  <script defer src="js/validaciones.js"></script>
   <script defer src="js/historial.js"></script>
 </body>
 </html>

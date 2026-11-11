@@ -267,8 +267,7 @@ section {
   margin: 0;
 }
 
-/* Aviso de maqueta y mensajes de estado (no dependen solo del color) */
-.aviso-maqueta,
+/* Mensajes de estado (no dependen solo del color) */
 .mensaje {
   padding: 0.85rem 1rem;
   margin-block: var(--espacio-md);
@@ -279,7 +278,6 @@ section {
   color: var(--color-info-texto);
 }
 
-.aviso-maqueta::before,
 .mensaje--info::before {
   content: "ℹ ";
   font-weight: 700;
@@ -525,6 +523,8 @@ legend {
 }
 
 #libro-registrado,
+#venta-registrada,
+#historial-detalle,
 #buscar-cliente-resultado {
   margin-block-start: var(--espacio-md);
 }
