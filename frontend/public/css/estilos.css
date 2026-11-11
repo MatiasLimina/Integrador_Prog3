@@ -333,7 +333,8 @@ section {
 #catalogo-busqueda,
 #form-libro,
 #form-cliente,
-#form-venta {
+#form-venta,
+#form-buscar-cliente {
   background-color: var(--color-superficie);
   border: 1px solid var(--color-borde);
   border-radius: var(--radio-borde);
@@ -367,36 +368,49 @@ label {
   margin-block-end: 0.3rem;
 }
 
-#libro-autores-opciones {
+/* Editor de autorías (alta de libro) y búsqueda de cliente por ID */
+.autorias__controles {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem 1.25rem;
+  align-items: flex-end;
+  gap: 0.75rem 1rem;
 }
 
-.opcion-casilla {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  min-height: 2.25rem;
-  padding: 0.25rem 0.6rem;
-  background-color: var(--color-superficie-alt);
-  border: 1px solid var(--color-borde);
-  border-radius: var(--radio-borde);
-}
-
-.opcion-casilla input[type="checkbox"] {
-  width: 1.1rem;
-  height: 1.1rem;
-  margin: 0;
-  accent-color: var(--color-primario);
-  cursor: pointer;
-}
-
-.opcion-casilla label {
-  display: inline;
-  font-weight: 500;
+.autorias__controles .campo {
+  flex: 1 1 10rem;
   margin-block-end: 0;
-  cursor: pointer;
+}
+
+.autorias__controles .campo:last-of-type {
+  flex-basis: 6rem;
+}
+
+.autorias__lista {
+  margin: var(--espacio-md) 0 0 0;
+  padding-inline-start: var(--espacio-lg);
+}
+
+.autorias__lista li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  padding-block: 0.25rem;
+  overflow-wrap: anywhere;
+}
+
+#form-buscar-cliente {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem 1rem;
+  margin-block-end: var(--espacio-md);
+}
+
+#form-buscar-cliente .campo {
+  flex: 1 1 14rem;
+  margin-block-end: 0;
 }
 
 input[type="text"],
@@ -508,6 +522,11 @@ legend {
 .detalle-venta,
 .detalle-libro {
   margin-block-end: var(--espacio-lg);
+}
+
+#libro-registrado,
+#buscar-cliente-resultado {
+  margin-block-start: var(--espacio-md);
 }
 
 .tarjeta-libro h3,

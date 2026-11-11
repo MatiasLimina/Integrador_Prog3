@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Libros — Librería Papel y Tinta</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="css/estilos.css">
 </head>
 <body data-vista="libros">
@@ -30,12 +31,12 @@
       <form id="form-libro" action="libros.html" method="get" novalidate>
         <div class="campo">
           <label for="libro-titulo">Título</label>
-          <input type="text" id="libro-titulo" name="titulo" required>
+          <input type="text" id="libro-titulo" name="titulo" maxlength="255" required>
         </div>
 
         <div class="campo">
           <label for="libro-isbn">ISBN</label>
-          <input type="text" id="libro-isbn" name="isbn" spellcheck="false" autocomplete="off" required>
+          <input type="text" id="libro-isbn" name="isbn" maxlength="30" spellcheck="false" autocomplete="off" required>
         </div>
 
         <div class="campo">
@@ -44,11 +45,14 @@
         </div>
 
         <div class="campo">
+          <label for="libro-stock">Stock</label>
+          <input type="number" id="libro-stock" name="stock" min="0" step="1" required>
+        </div>
+
+        <div class="campo">
           <label for="libro-editorial">Editorial</label>
           <select id="libro-editorial" name="editorialId" required>
             <option value="">Elegí una editorial</option>
-            <option value="1">Ediciones del Sur</option>
-            <option value="2">Editorial Faro</option>
           </select>
         </div>
 
@@ -56,28 +60,41 @@
           <label for="libro-genero">Género</label>
           <select id="libro-genero" name="generoId">
             <option value="">Sin clasificar</option>
-            <option value="1">Novela</option>
-            <option value="2">Ensayo</option>
           </select>
         </div>
 
-        <fieldset id="libro-autores">
-          <legend>Autores (elegí al menos uno)</legend>
-          <div id="libro-autores-opciones">
-            <div class="opcion-casilla">
-              <input type="checkbox" id="libro-autor-1" name="autorIds" value="1">
-              <label for="libro-autor-1">Ana Ríos</label>
+        <fieldset id="libro-autorias" class="autorias">
+          <legend>Autores (agregá al menos uno)</legend>
+          <div class="autorias__controles">
+            <div class="campo">
+              <label for="libro-autoria-autor">Autor</label>
+              <select id="libro-autoria-autor" name="autoriaAutor">
+                <option value="">Elegí un autor</option>
+              </select>
             </div>
-            <div class="opcion-casilla">
-              <input type="checkbox" id="libro-autor-2" name="autorIds" value="2">
-              <label for="libro-autor-2">Bruno Paz</label>
+            <div class="campo">
+              <label for="libro-autoria-rol">Rol</label>
+              <select id="libro-autoria-rol" name="autoriaRol">
+                <option value="autor" selected>Autor</option>
+                <option value="coautor">Coautor</option>
+                <option value="traductor">Traductor</option>
+                <option value="ilustrador">Ilustrador</option>
+              </select>
             </div>
-            <div class="opcion-casilla">
-              <input type="checkbox" id="libro-autor-3" name="autorIds" value="3">
-              <label for="libro-autor-3">Carla Vega</label>
+            <div class="campo">
+              <label for="libro-autoria-orden">Orden</label>
+              <input type="number" id="libro-autoria-orden" name="autoriaOrden" min="1" step="1" value="1">
             </div>
+            <button type="button" id="libro-autoria-agregar">Agregar autoría</button>
           </div>
+          <p id="libro-autoria-error" class="mensaje mensaje--error" role="alert" hidden></p>
+          <ol id="libro-autorias-lista" class="autorias__lista"></ol>
         </fieldset>
+
+        <div id="libro-opciones-error" class="mensaje mensaje--error" role="alert" hidden>
+          <p id="libro-opciones-error-texto"></p>
+          <button type="button" id="libro-opciones-reintentar">Reintentar</button>
+        </div>
 
         <p id="libros-mensaje-ok" class="mensaje mensaje--ok" data-estado="ok" role="status" hidden>
           Libro registrado correctamente.
@@ -88,18 +105,47 @@
           <ul id="libros-errores"></ul>
         </div>
 
-        <button type="submit">Registrar libro</button>
+        <button type="submit" id="libro-enviar">Registrar libro</button>
       </form>
+
+      <div id="libro-registrado" class="detalle-libro" hidden>
+        <h3 id="titulo-libro-registrado" tabindex="-1">Libro registrado</h3>
+        <dl>
+          <dt>ID</dt>
+          <dd data-campo="id"></dd>
+          <dt>Título</dt>
+          <dd data-campo="titulo"></dd>
+          <dt>ISBN</dt>
+          <dd data-campo="isbn"></dd>
+          <dt>Precio</dt>
+          <dd data-campo="precio"></dd>
+          <dt>Stock</dt>
+          <dd data-campo="stock"></dd>
+          <dt>Editorial</dt>
+          <dd data-campo="editorial"></dd>
+          <dt>Género</dt>
+          <dd data-campo="genero"></dd>
+        </dl>
+        <h4>Autorías</h4>
+        <ol id="libro-registrado-autorias" class="detalle-libro__autores"></ol>
+      </div>
     </section>
 
     <section aria-labelledby="titulo-listado-libros">
       <h2 id="titulo-listado-libros">Libros registrados</h2>
 
+      <p id="libros-mensaje-cargando" class="mensaje mensaje--info" data-estado="cargando" role="status" hidden>
+        Cargando libros…
+      </p>
       <p id="libros-mensaje-vacio" class="mensaje mensaje--info" data-estado="vacio" role="status" hidden>
         Todavía no hay libros registrados.
       </p>
+      <div id="libros-mensaje-error-carga" class="mensaje mensaje--error" data-estado="error" role="alert" hidden>
+        <p id="libros-mensaje-error-carga-texto"></p>
+        <button type="button" id="libros-reintentar">Reintentar</button>
+      </div>
 
-      <div class="tabla-contenedor">
+      <div id="libros-tabla" class="tabla-contenedor" hidden>
         <table>
           <caption>Listado de libros registrados</caption>
           <thead>
@@ -108,43 +154,11 @@
               <th scope="col">ISBN</th>
               <th scope="col">Editorial</th>
               <th scope="col">Género</th>
-              <th scope="col">Autores</th>
               <th scope="col">Precio</th>
+              <th scope="col">Stock</th>
             </tr>
           </thead>
           <tbody id="libros-lista">
-            <tr data-libro-id="1">
-              <td data-campo="titulo">El jardín de las horas</td>
-              <td data-campo="isbn">978-950-000-001-1</td>
-              <td data-campo="editorial">Ediciones del Sur</td>
-              <td data-campo="genero">Novela</td>
-              <td data-campo="autores">Ana Ríos</td>
-              <td data-campo="precio">1500.00</td>
-            </tr>
-            <tr data-libro-id="2">
-              <td data-campo="titulo">Mapas del silencio</td>
-              <td data-campo="isbn">978-950-000-002-8</td>
-              <td data-campo="editorial">Editorial Faro</td>
-              <td data-campo="genero">Ensayo</td>
-              <td data-campo="autores">Bruno Paz, Carla Vega</td>
-              <td data-campo="precio">2000.00</td>
-            </tr>
-            <tr data-libro-id="3">
-              <td data-campo="titulo">Cuentos de medianoche</td>
-              <td data-campo="isbn">978-950-000-003-5</td>
-              <td data-campo="editorial">Ediciones del Sur</td>
-              <td data-campo="genero">Sin clasificar</td>
-              <td data-campo="autores">Carla Vega</td>
-              <td data-campo="precio">3200.50</td>
-            </tr>
-            <tr data-libro-id="4">
-              <td data-campo="titulo">La ciudad invisible</td>
-              <td data-campo="isbn">978-950-000-004-2</td>
-              <td data-campo="editorial">Editorial Faro</td>
-              <td data-campo="genero">Novela</td>
-              <td data-campo="autores">Ana Ríos, Bruno Paz</td>
-              <td data-campo="precio">2750.00</td>
-            </tr>
           </tbody>
         </table>
       </div>
@@ -156,18 +170,17 @@
         <td data-campo="isbn"></td>
         <td data-campo="editorial"></td>
         <td data-campo="genero"></td>
-        <td data-campo="autores"></td>
         <td data-campo="precio"></td>
+        <td data-campo="stock"></td>
       </tr>
     </template>
   </main>
 
   <footer class="pie">
-    <p>TPI Programación III — datos ficticios, sin backend.</p>
+    <p>TPI Programación III — datos ficticios servidos por la API de la librería.</p>
   </footer>
 
-  <script defer src="js/datos.js"></script>
-  <script defer src="js/persistencia.js"></script>
+  <script defer src="js/api.js"></script>
   <script defer src="js/validaciones.js"></script>
   <script defer src="js/altas.js"></script>
 </body>

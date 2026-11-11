@@ -122,5 +122,28 @@
     });
   }
 
-  window.Api = { pedir: pedir };
+  var TAMANO_PAGINA = 100;
+
+  // Lee un listado completo: pide páginas de 100 en secuencia hasta recibir una
+  // con menos elementos. Si una página falla, rechaza con su error (sin parciales).
+  function listarTodo(ruta) {
+    var acumulado = [];
+
+    function pedirPagina(offset) {
+      return pedir(ruta, { parametros: { limit: TAMANO_PAGINA, offset: offset } }).then(function (pagina) {
+        if (!Array.isArray(pagina)) {
+          throw { tipo: "respuesta", mensaje: "El servidor devolvió una respuesta inesperada. Intentá de nuevo." };
+        }
+        acumulado = acumulado.concat(pagina);
+        if (pagina.length < TAMANO_PAGINA) {
+          return acumulado;
+        }
+        return pedirPagina(offset + TAMANO_PAGINA);
+      });
+    }
+
+    return pedirPagina(0);
+  }
+
+  window.Api = { pedir: pedir, listarTodo: listarTodo };
 })();

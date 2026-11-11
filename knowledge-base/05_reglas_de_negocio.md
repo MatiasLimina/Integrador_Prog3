@@ -8,15 +8,15 @@
 
 ## Alta de libros (Ej. 4)
 - **RN-05** Título e ISBN no vacíos.
-- **RN-06** ISBN único; se compara sin espacios ni guiones. No se valida dígito de control.
-- **RN-07** Precio numérico y > 0.
-- **RN-08** Editorial y todos los autores seleccionados existen; al menos un autor.
-- **RN-09** Género opcional («Sin clasificar» = ausencia); si se asigna, debe existir.
+- **RN-06** ISBN único. _En el Global la unicidad la decide la API (409) y compara el valor exacto, con guiones y espacios tal cual; el navegador solo recorta los espacios exteriores (ver brechas de I-03 en `10`). No se valida dígito de control._
+- **RN-07** Precio numérico y > 0, con hasta dos decimales y máximo 99999999.99 (valida el navegador; se envía como cadena). Stock entero ≥ 0 y ≤ 2147483647, obligatorio en el formulario (valida el navegador).
+- **RN-08** Editorial elegida y al menos una autoría `{autor_id, rol, orden}` (rol en autor, coautor, traductor, ilustrador; orden entero ≥ 1; sin repetir autor): lo valida el navegador porque la API acepta `autores=[]`. La existencia de la editorial y de los autores la decide la API (409).
+- **RN-09** Género opcional («Sin clasificar» = ausencia, se envía `genero_id: null`); si se asigna, su existencia la decide la API (409).
 
 ## Alta de clientes (Ej. 4)
 - **RN-10** Nombre completo y email no vacíos (un solo campo de nombre). _En el Global el campo se envía como `nombre` (ver nota de contrato en 04)._
 - **RN-11** Email con formato válido.
-- **RN-12** Email único, comparado sin espacios exteriores y sin distinguir mayúsculas.
+- **RN-12** Email único. _En el Global la unicidad la decide la API (409) y compara el valor exacto (la API solo pasa el dominio a minúsculas); el navegador solo recorta los espacios exteriores (ver brechas de I-03 en `10`)._
 
 ## Formularios (Ej. 4)
 - **RN-13** Envío controlado con `preventDefault`; errores cerca del formulario; solo se agrega el registro si todo pasa.

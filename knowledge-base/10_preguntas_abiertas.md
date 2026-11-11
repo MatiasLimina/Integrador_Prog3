@@ -43,3 +43,12 @@ Relevadas al construir el cliente HTTP y el Catálogo; ninguna requiere cambios 
 - `titulo` con solo espacios filtraría por `'% %'`: el frontend recorta el texto y omite el parámetro si queda vacío. Atiende I-02; sin cambios en el backend.
 - El seed deja 4 libros: se ofrecen tamaños de página chicos (2, 5, 10) para poder demostrar G-01 (paginación) sin cargar más datos. Atiende I-02; sin cambios en el backend.
 - El requisito «Aviso de maqueta de la etapa 1» de `navegacion-vistas` no se cumple en el HTML actual (ninguna vista tiene aviso) y ya no describe el Global. Queda para un change posterior (I-03/I-04 al tocar sus vistas, o I-06 en la revisión de entrega); no requiere cambios en el backend.
+
+## Brechas de contrato halladas en I-03
+Relevadas al migrar las altas de libros y clientes a la API; ninguna requiere cambios en el backend:
+- Los listados (`/editoriales/`, `/generos/`, `/autores/`, `/libros/`, `/clientes/`) devuelven 20 elementos por defecto: los selectores y tablas piden `limit=100` y paginan con `Api.listarTodo`. Atiende I-03; lo reutiliza I-04.
+- El ISBN y el email se comparan exactos en la base: `978-950-07-0001-1` y `9789500700011`, o `Lucia@example.com` y `lucia@example.com` (`EmailStr` solo pasa el dominio a minúsculas), se registran como distintos. Se pierde la normalización del parcial (RN-06, RN-12); la unicidad la decide el 409 de la API y no se cambia el backend. Atiende I-03.
+- `stock` tiene `default=0` en el backend, pero el formulario lo exige escrito. Atiende I-03; sin cambios en el backend.
+- `orden` repetido entre autorías se acepta; el mismo autor dos veces responde 409 (`pk_libro_autor`), por eso el navegador lo rechaza antes de enviar. Atiende I-03; sin cambios en el backend.
+- `precio` se envía como cadena (`"1500.50"`) para que `Decimal` reciba el valor exacto sin pasar por coma flotante. Atiende I-03; sin cambios en el backend.
+- Ventas e Historial siguen con datos locales: lo registrado por la API en Libros y Clientes no aparece allí hasta I-04. No requiere cambios en el backend.

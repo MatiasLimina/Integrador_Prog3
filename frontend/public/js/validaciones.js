@@ -2,6 +2,11 @@
   "use strict";
 
   var FORMATO_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  var FORMATO_PRECIO = /^\d+(\.\d{1,2})?$/;
+  var FORMATO_ENTERO = /^-?\d+$/;
+  var PRECIO_MAXIMO = 99999999.99;
+  var ENTERO_MAXIMO = 2147483647;
+  var ROLES = ["autor", "coautor", "traductor", "ilustrador"];
 
   // Texto -> string seguro para validar (nunca null/undefined).
   function comoTexto(valor) {
@@ -11,35 +16,57 @@
     return String(valor);
   }
 
-  // trim() y quita espacios y guiones (para comparar ISBN).
-  function normalizarIsbn(valor) {
-    return comoTexto(valor).trim().replace(/[\s-]/g, "");
-  }
-
-  // trim() y minúsculas (para comparar emails).
-  function normalizarEmail(valor) {
-    return comoTexto(valor).trim().toLowerCase();
-  }
-
-  // Ids normalizados a String y únicos, descartando valores vacíos.
-  function unicosComoTexto(ids) {
-    var unicos = [];
-    if (!ids) {
-      return unicos;
+  // Texto de un entero -> Number, o null si no es un entero escrito en decimal.
+  function comoEntero(texto) {
+    if (!FORMATO_ENTERO.test(texto)) {
+      return null;
     }
-    for (var i = 0; i < ids.length; i++) {
-      var id = comoTexto(ids[i]).trim();
-      if (id !== "" && unicos.indexOf(id) === -1) {
-        unicos.push(id);
-      }
-    }
-    return unicos;
+    return Number(texto);
   }
 
-  // Valida un alta de libro (RN-05..RN-09). Pura: no toca DOM ni datos.
-  function validarLibro(entrada, libros) {
+  // Valida el precio recortado; devuelve el error o "" si es válido.
+  function errorDePrecio(precioTexto) {
+    if (precioTexto === "") {
+      return "El precio es obligatorio.";
+    }
+    if (isNaN(Number(precioTexto))) {
+      return "El precio debe ser un número.";
+    }
+    if (Number(precioTexto) <= 0) {
+      return "El precio debe ser mayor que cero.";
+    }
+    if (!FORMATO_PRECIO.test(precioTexto)) {
+      return "El precio admite hasta dos decimales.";
+    }
+    if (Number(precioTexto) > PRECIO_MAXIMO) {
+      return "El precio no puede superar 99999999.99.";
+    }
+    return "";
+  }
+
+  // Valida el stock recortado; devuelve el error o "" si es válido.
+  function errorDeStock(stockTexto) {
+    if (stockTexto === "") {
+      return "El stock es obligatorio.";
+    }
+    var stock = comoEntero(stockTexto);
+    if (stock === null) {
+      return "El stock debe ser un número entero.";
+    }
+    if (stock < 0) {
+      return "El stock no puede ser negativo.";
+    }
+    if (stock > ENTERO_MAXIMO) {
+      return "El stock no puede superar 2147483647.";
+    }
+    return "";
+  }
+
+  // Valida un alta de libro. Pura: no toca DOM ni datos. `cuerpo` es el JSON del contrato.
+  // `autorias` es el borrador: [{autor_id, nombre, rol, orden}].
+  function validarLibro(entrada, autorias) {
     var datos = entrada || {};
-    var coleccion = libros || [];
+    var lista = autorias || [];
     var errores = [];
 
     var titulo = comoTexto(datos.titulo).trim();
@@ -50,80 +77,105 @@
     var isbn = comoTexto(datos.isbn).trim();
     if (isbn === "") {
       errores.push("El ISBN es obligatorio.");
-    } else {
-      var isbnComparable = normalizarIsbn(isbn).toLowerCase();
-      for (var i = 0; i < coleccion.length; i++) {
-        if (normalizarIsbn(coleccion[i].isbn).toLowerCase() === isbnComparable) {
-          errores.push("El ISBN ya está registrado en otro libro.");
-          break;
-        }
-      }
     }
 
     var precioTexto = comoTexto(datos.precio).trim();
-    var precio = "";
-    if (precioTexto === "") {
-      errores.push("El precio es obligatorio.");
-    } else {
-      precio = Number(precioTexto);
-      if (isNaN(precio)) {
-        errores.push("El precio debe ser un número.");
-        precio = precioTexto;
-      } else if (precio <= 0) {
-        errores.push("El precio debe ser mayor que cero.");
-      }
+    var errorPrecio = errorDePrecio(precioTexto);
+    if (errorPrecio !== "") {
+      errores.push(errorPrecio);
+    }
+
+    var stockTexto = comoTexto(datos.stock).trim();
+    var errorStock = errorDeStock(stockTexto);
+    if (errorStock !== "") {
+      errores.push(errorStock);
     }
 
     var editorialTexto = comoTexto(datos.editorialId).trim();
-    if (editorialTexto === "") {
+    var editorialId = comoEntero(editorialTexto);
+    if (editorialId === null || editorialId < 1) {
       errores.push("Elegí una editorial.");
-    } else if (window.Datos.buscarEditorial(editorialTexto) === null) {
-      errores.push("La editorial seleccionada no existe.");
-    }
-
-    var autorIds = unicosComoTexto(datos.autorIds);
-    if (autorIds.length === 0) {
-      errores.push("Elegí al menos un autor.");
-    } else if (window.Datos.buscarAutores(autorIds).length !== autorIds.length) {
-      errores.push("Uno de los autores seleccionados no existe.");
     }
 
     var generoTexto = comoTexto(datos.generoId).trim();
-    if (generoTexto !== "" && window.Datos.buscarGenero(generoTexto) === null) {
-      errores.push("El género seleccionado no existe.");
+    var generoId = generoTexto === "" ? null : comoEntero(generoTexto);
+    if (generoTexto !== "" && (generoId === null || generoId < 1)) {
+      errores.push("El género seleccionado no es válido.");
     }
 
-    var numeros = [];
-    for (var j = 0; j < autorIds.length; j++) {
-      numeros.push(Number(autorIds[j]));
+    if (lista.length === 0) {
+      errores.push("Agregá al menos un autor.");
     }
 
-    var datosNormalizados = {
-      titulo: titulo,
-      isbn: isbn,
-      precio: precio,
-      editorialId: editorialTexto === "" ? "" : Number(editorialTexto),
-      autorIds: numeros
-    };
-    if (generoTexto !== "") {
-      datosNormalizados.generoId = Number(generoTexto);
+    var autores = [];
+    for (var i = 0; i < lista.length; i++) {
+      autores.push({
+        autor_id: lista[i].autor_id,
+        rol: lista[i].rol,
+        orden: lista[i].orden
+      });
     }
 
     return {
       valido: errores.length === 0,
       errores: errores,
-      datosNormalizados: datosNormalizados
+      cuerpo: {
+        isbn: isbn,
+        titulo: titulo,
+        precio: precioTexto,
+        stock: errorStock === "" ? Number(stockTexto) : stockTexto,
+        editorial_id: editorialId,
+        genero_id: generoId,
+        autores: autores
+      }
     };
   }
 
-  // Valida un alta de cliente (RN-10..RN-12). Pura: no toca DOM ni datos.
-  function validarCliente(entrada, clientes) {
+  // Valida una autoría antes de agregarla al borrador. Pura.
+  // entrada: {autorId, rol, orden}; autorias: borrador actual [{autor_id, ...}].
+  function validarAutoria(entrada, autorias) {
     var datos = entrada || {};
-    var coleccion = clientes || [];
+    var lista = autorias || [];
     var errores = [];
 
-    var nombreCompleto = comoTexto(datos.nombreCompleto).trim();
-    if (nombreCompleto === "") {
+    var autorTexto = comoTexto(datos.autorId).trim();
+    var autorId = comoEntero(autorTexto);
+    if (autorId === null || autorId < 1) {
+      errores.push("Elegí un autor.");
+    } else {
+      for (var i = 0; i < lista.length; i++) {
+        if (lista[i].autor_id === autorId) {
+          errores.push("Ese autor ya está en el libro.");
+          break;
+        }
+      }
+    }
+
+    var rol = comoTexto(datos.rol).trim();
+    if (ROLES.indexOf(rol) === -1) {
+      errores.push("El rol debe ser autor, coautor, traductor o ilustrador.");
+    }
+
+    var ordenTexto = comoTexto(datos.orden).trim();
+    var orden = comoEntero(ordenTexto);
+    if (orden === null || orden < 1 || orden > ENTERO_MAXIMO) {
+      errores.push("El orden debe ser un entero mayor o igual que 1.");
+    }
+
+    return {
+      valido: errores.length === 0,
+      errores: errores,
+      autoria: { autor_id: autorId, rol: rol, orden: orden }
+    };
+  }
+
+  // Valida un alta de cliente. Pura. No decide la unicidad del email: la decide la API.
+  function validarCliente(entrada) {
+    var datos = entrada || {};
+    var errores = [];
+
+    var nombre = comoTexto(datos.nombreCompleto).trim();
+    if (nombre === "") {
       errores.push("El nombre completo es obligatorio.");
     }
 
@@ -132,26 +184,27 @@
       errores.push("El email es obligatorio.");
     } else if (!FORMATO_EMAIL.test(email)) {
       errores.push("El email no tiene un formato válido.");
-    } else {
-      var emailComparable = normalizarEmail(email);
-      for (var i = 0; i < coleccion.length; i++) {
-        if (normalizarEmail(coleccion[i].email) === emailComparable) {
-          errores.push("El email ya está registrado.");
-          break;
-        }
-      }
     }
-
-    var datosNormalizados = {
-      nombre: nombreCompleto,
-      email: email
-    };
 
     return {
       valido: errores.length === 0,
       errores: errores,
-      datosNormalizados: datosNormalizados
+      cuerpo: { nombre: nombre, email: email }
     };
+  }
+
+  // Valida el ID escrito para buscar un cliente: entero entre 1 y 2147483647.
+  function validarIdCliente(texto) {
+    var recortado = comoTexto(texto).trim();
+    var id = comoEntero(recortado);
+    if (id === null || id < 1 || id > ENTERO_MAXIMO) {
+      return {
+        valido: false,
+        errores: ["El ID debe ser un entero entre 1 y 2147483647."],
+        id: null
+      };
+    }
+    return { valido: true, errores: [], id: id };
   }
 
   // Valida una venta (RN-15, RN-16, RN-20). Pura: no toca DOM ni datos.
@@ -224,10 +277,10 @@
   }
 
   window.Validaciones = {
-    normalizarIsbn: normalizarIsbn,
-    normalizarEmail: normalizarEmail,
     validarLibro: validarLibro,
+    validarAutoria: validarAutoria,
     validarCliente: validarCliente,
+    validarIdCliente: validarIdCliente,
     validarVenta: validarVenta
   };
 })();
